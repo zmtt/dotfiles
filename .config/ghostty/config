@@ -1,0 +1,16 @@
+# Theme
+theme = "Solarized Osaka Dark"
+
+# Font
+font-size = 14.0
+
+# Cursor
+cursor-style = block
+shell-integration-features = no-cursor,no-sudo,title
+
+# Window Size
+window-width = 100
+window-height = 30
+
+quit-after-last-window-closed = true
+keybind = shift+enter=text:\x1b\r
