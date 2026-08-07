@@ -7,3 +7,8 @@
 [includeIf "gitdir:~/Developer/"]
     path = ~/.config/git/work.conf
 
+# More specific rule wins (must stay after the work include):
+# personal projects under ~/Developer/personal/ use the personal identity.
+[includeIf "gitdir:~/Developer/personal/"]
+    path = ~/.config/git/personal.conf
+
