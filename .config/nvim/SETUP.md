@@ -6,43 +6,30 @@
 
 | Dependency | Purpose | Install |
 |------------|---------|---------|
-| **Neovim 0.10+** | Required for `vim.lsp.config` API | `brew install neovim` |
+| **Neovim 0.12+** | Required for `vim.lsp.config` API and nvim-treesitter (main branch) | `brew install neovim` |
 | **Git** | Plugin manager (lazy.nvim) | `brew install git` |
-| **C compiler + make** | Build telescope-fzf-native | `xcode-select --install` |
+| **C compiler + make** | Build telescope-fzf-native and treesitter parsers | `xcode-select --install` |
 | **ripgrep** | Telescope live grep | `brew install ripgrep` |
 | **fd** | Faster file finding (optional) | `brew install fd` |
 
 ### Manual Tool Installs (not in Mason)
 
 ```bash
-brew install swiftformat ktlint
+brew install ktlint
+brew install --cask kotlin-lsp
 ```
 
 - **Xcode Command Line Tools** - for sourcekit-lsp (Swift support)
+- Swift formatting uses the toolchain's own `swift format` (Swift 6+), no separate install
 
 ### Auto-Installed via Mason
 
-These are installed automatically on first launch:
+Declared in `lua/plugins/mason.lua`, installed automatically on first launch:
 
-- `stylua` - Lua formatter
-- `black` - Python formatter
-- `isort` - Python import sorter
-- `prettierd` - JS/TS/Web formatter
-- `shfmt` - Shell formatter
+- LSP servers: `lua-language-server`, `pyright`, `ruff`, `typescript-language-server`, `bash-language-server`, `marksman`, `yaml-language-server` (kotlin-lsp comes from brew)
+- Formatters: `stylua`, `prettierd`, `shfmt`
 
-### LSP Servers (via Mason)
-
-These are configured and will be installed via Mason:
-
-- `lua_ls` - Lua
-- `pyright` - Python
-- `ts_ls` - TypeScript/JavaScript
-- `bashls` - Bash/Shell
-- `marksman` - Markdown
-- `yamlls` - YAML
-- `kotlin_language_server` - Kotlin
-- `jdtls` - Java
-- `sourcekit` - Swift (via Xcode, not Mason)
+Swift's `sourcekit-lsp` comes from Xcode (`xcrun`), not Mason. Python formatting and import sorting are handled by `ruff` via conform.nvim.
 
 ## Replicating on Another Mac
 
@@ -53,7 +40,7 @@ These are configured and will be installed via Mason:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install dependencies
-brew install neovim git ripgrep fd swiftformat ktlint
+brew install neovim git ripgrep fd
 
 # Ensure Xcode CLI tools (for C compiler + sourcekit-lsp)
 xcode-select --install
@@ -80,6 +67,7 @@ On first launch:
 - lazy.nvim bootstraps itself
 - Plugins install automatically
 - Mason auto-installs formatters/LSPs
+- Treesitter parsers install in the background
 
 ## Version Control (Recommended)
 
@@ -94,4 +82,4 @@ git remote add origin <your-repo-url>
 git push -u origin main
 ```
 
-The `lazy-lock.json` ensures exact plugin versions are reproducible across machines.
+Commit `lazy-lock.json`: it pins exact plugin versions so the config is reproducible across machines.

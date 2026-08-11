@@ -32,6 +32,15 @@ vim.o.shiftround = true -- Round indent to multiple of shiftwidth
 vim.o.ignorecase = true
 vim.o.smartcase = true
 
+-- Persistent undo across sessions
+vim.o.undofile = true
+
+-- Disable language providers we don't use (silences :checkhealth warnings)
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_node_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
+
 -- Diagnostics display
 vim.diagnostic.config({
 	virtual_text = false,

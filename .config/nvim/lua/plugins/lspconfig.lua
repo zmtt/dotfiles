@@ -5,97 +5,75 @@ return {
         "saghen/blink.cmp",
     },
     config = function()
-        local capabilities = require("blink.cmp").get_lsp_capabilities()
+        local on_attach = require("lsp.shared").on_attach
 
-        local on_attach = function(client, bufnr)
-            local opts = { noremap = true, silent = true, buffer = bufnr }
-
-            vim.keymap.set("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
-            vim.keymap.set("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Hover documentation" }))
-            vim.keymap.set("n", "gi", vim.lsp.buf.implementation, vim.tbl_extend("force", opts, { desc = "Go to implementation" }))
-            vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename symbol" }))
-            vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "Code action" }))
-            vim.keymap.set("n", "gr", vim.lsp.buf.references, vim.tbl_extend("force", opts, { desc = "References" }))
-            vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, vim.tbl_extend("force", opts, { desc = "Line diagnostics" }))
-            vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
-            vim.keymap.set("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
-
-            local ok, wk = pcall(require, "which-key")
-            if ok then
-                wk.add({
-                    { "<leader>c", group = "code", buffer = bufnr },
-                    { "<leader>r", group = "refactor", buffer = bufnr },
-                })
-            end
-        end
-
-        -- Configure LSP servers using vim.lsp.config
-        vim.lsp.config.lua_ls = {
-            capabilities = capabilities,
+        -- Applied to every server; per-server configs below only add what
+        -- differs (a server-specific on_attach replaces this one).
+        vim.lsp.config("*", {
+            capabilities = require("blink.cmp").get_lsp_capabilities(),
             on_attach = on_attach,
+        })
+
+        vim.lsp.config("lua_ls", {
             settings = {
                 Lua = {
                     diagnostics = {
                         globals = { "vim" },
                     },
                     workspace = {
-                        library = vim.api.nvim_get_runtime_file("", true),
-                    },
-                    telemetry = {
-                        enable = false,
+                        library = { vim.env.VIMRUNTIME },
                     },
                 },
             },
-        }
+        })
 
-        vim.lsp.config.pyright = {
-            capabilities = capabilities,
-            on_attach = on_attach,
-        }
+        vim.lsp.config("pyright", {
+            settings = {
+                pyright = {
+                    disableOrganizeImports = true,
+                },
+                python = {
+                    analysis = {
+                        typeCheckingMode = "basic",
+                        autoSearchPaths = true,
+                        useLibraryCodeForTypes = true,
+                        diagnosticMode = "openFilesOnly",
+                    },
+                },
+            },
+        })
 
-        vim.lsp.config.ts_ls = {
-            capabilities = capabilities,
-            on_attach = on_attach,
-        }
+        vim.lsp.config("ruff", {
+            on_attach = function(client, bufnr)
+                client.server_capabilities.hoverProvider = false
+                on_attach(client, bufnr)
+            end,
+        })
 
-        vim.lsp.config.bashls = {
-            capabilities = capabilities,
-            on_attach = on_attach,
-        }
-
-        vim.lsp.config.marksman = {
-            capabilities = capabilities,
-            on_attach = on_attach,
-        }
-
-        vim.lsp.config.yamlls = {
-            capabilities = capabilities,
-            on_attach = on_attach,
-        }
-
-        vim.lsp.config.kotlin_language_server = {
-            capabilities = capabilities,
-            on_attach = on_attach,
-            filetypes = { "kotlin" },
-        }
-
-        vim.lsp.config.jdtls = {
-            capabilities = capabilities,
-            on_attach = on_attach,
-            filetypes = { "java" },
-        }
+        -- Kotlin: JetBrains' official kotlin-lsp (brew: cask "kotlin-lsp").
+        -- Replaces fwcd's kotlin-language-server, whose Gradle resolver is
+        -- incompatible with org.gradle.configuration-cache=true and is in
+        -- maintenance mode upstream.
+        vim.lsp.config("kotlin_lsp", {
+            -- lspconfig's default cmd is intellij-server, which only the Mason
+            -- package shipped; the brew cask installs the kotlin-lsp launcher.
+            cmd = { "kotlin-lsp", "--stdio" },
+            -- lspconfig's default root_markers include per-module
+            -- build.gradle(.kts), which roots the server at a submodule;
+            -- restrict to repo-root markers.
+            root_markers = { "settings.gradle", "settings.gradle.kts", "workspace.json", ".git" },
+        })
 
         local has_xcrun = vim.fn.executable("xcrun") == 1
         if has_xcrun then
-            vim.lsp.config.sourcekit = {
+            vim.lsp.config("sourcekit", {
                 cmd = { "xcrun", "sourcekit-lsp" },
-                capabilities = capabilities,
-                on_attach = on_attach,
                 filetypes = { "swift", "objc", "objcpp" },
-            }
+            })
         else
             local warned_sourcekit = false
             vim.api.nvim_create_autocmd("FileType", {
+                group = vim.api.nvim_create_augroup("sourcekit-missing-warning", { clear = true }),
                 pattern = { "swift", "objc", "objcpp" },
                 callback = function()
                     if warned_sourcekit then
@@ -113,12 +91,12 @@ return {
         vim.lsp.enable({
             "lua_ls",
             "pyright",
+            "ruff",
             "ts_ls",
             "bashls",
             "marksman",
             "yamlls",
-            "kotlin_language_server",
-            "jdtls",
+            "kotlin_lsp",
             has_xcrun and "sourcekit" or nil,
         })
     end,

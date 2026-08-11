@@ -4,54 +4,48 @@ return {
 	cmd = { "ConformInfo" },
 	keys = {
 		{
-			"<leader>f",
+			"<leader>cf",
 			function()
-				require("conform").format({ async = true, lsp_fallback = true })
+				require("conform").format({ async = true, lsp_format = "fallback" })
 			end,
 			mode = "",
 			desc = "Format buffer",
 		},
 	},
 	opts = function()
-		local has_swiftformat = vim.fn.executable("swiftformat") == 1
+		local has_swift = vim.fn.executable("swift") == 1
 		local has_ktlint = vim.fn.executable("ktlint") == 1
 
 		return {
 			formatters_by_ft = {
 				lua = { "stylua" },
-				python = { "isort", "black" },
-				javascript = { "prettierd", "prettier", stop_after_first = true },
-				typescript = { "prettierd", "prettier", stop_after_first = true },
-				javascriptreact = { "prettierd", "prettier", stop_after_first = true },
-				typescriptreact = { "prettierd", "prettier", stop_after_first = true },
-				json = { "prettierd", "prettier", stop_after_first = true },
-				yaml = { "prettierd", "prettier", stop_after_first = true },
-				markdown = { "prettierd", "prettier", stop_after_first = true },
-				html = { "prettierd", "prettier", stop_after_first = true },
-				css = { "prettierd", "prettier", stop_after_first = true },
+				python = { "ruff_fix", "ruff_organize_imports", "ruff_format" },
+				javascript = { "prettierd" },
+				typescript = { "prettierd" },
+				javascriptreact = { "prettierd" },
+				typescriptreact = { "prettierd" },
+				json = { "prettierd" },
+				yaml = { "prettierd" },
+				markdown = { "prettierd" },
+				html = { "prettierd" },
+				css = { "prettierd" },
 				sh = { "shfmt" },
-				swift = has_swiftformat and { "swiftformat" } or {},
+				-- Official Apple swift-format via the toolchain (`swift format`),
+				-- bundled with Swift 6+. Style is controlled by a project-local
+				-- `.swift-format` file (defaults to 2-space indent).
+				swift = has_swift and { "swift" } or {},
 				kotlin = has_ktlint and { "ktlint" } or {},
 			},
 			format_on_save = {
 				timeout_ms = 500,
-				lsp_fallback = true,
+				lsp_format = "fallback",
 			},
 			formatters = {
 				shfmt = {
 					prepend_args = { "-i", "4" },
 				},
-				prettier = {
-					prepend_args = { "--tab-width", "4" },
-				},
 				prettierd = {
-					prepend_args = { "--tab-width", "4" },
-				},
-				black = {
-					prepend_args = { "--line-length", "88" },
-				},
-				swiftformat = {
-					prepend_args = { "--indent", "4" },
+					prepend_args = { "--tab-width=4" },
 				},
 				ktlint = {
 					prepend_args = { "--indent-size=4" },

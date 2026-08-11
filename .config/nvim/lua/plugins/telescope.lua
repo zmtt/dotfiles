@@ -10,13 +10,7 @@ return {
 	},
 	opts = {
 		defaults = {
-			-- Your default configuration here
 			layout_strategy = "vertical",
-			-- layout_config = {
-			-- 	horizontal = {
-			-- 		preview_width = 0.5,
-			-- 	},
-			-- },
 			path_display = { "truncate" },
 			file_ignore_patterns = {
 				"%.git/",
