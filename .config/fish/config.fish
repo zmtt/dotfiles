@@ -1,44 +1,43 @@
-if status is-interactive
-    # Commands to run in interactive sessions can go here
-end
+# --- Environment ---
+set -gx EDITOR nvim
+set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
 
-# Homebrew
+# fzf: shared UI options + fd-powered file/dir sources (Ctrl-T / Alt-C)
+set -gx FZF_DEFAULT_OPTS "--height=80% --layout=reverse --border"
+set -gx FZF_DEFAULT_COMMAND "fd --type f --hidden --follow --exclude .git"
+set -gx FZF_CTRL_T_COMMAND $FZF_DEFAULT_COMMAND
+set -gx FZF_ALT_C_COMMAND "fd --type d --hidden --follow --exclude .git"
+
+# Homebrew (unconditional: non-interactive fish needs brew tools on PATH too)
 eval (/opt/homebrew/bin/brew shellenv)
 
-# Greeting is disabled via fish_variables (universal variable)
+# PATH (fish_add_path is idempotent, keeps fish_user_paths reproducible from here)
+fish_add_path ~/.local/bin
 
-# Aliases
+set -g fish_greeting ""
 
-# Changing "cat" to "bat"
-alias cat="bat"
+if status is-interactive
+    # Prompt, cd frecency, fzf key bindings
+    starship init fish | source
+    zoxide init fish | source
+    fzf --fish | source
 
-# Changing "vim" to "nvim"
-alias vim="nvim"
+    # eza ls family (color/icons auto-disable when piped)
+    set -l eza "eza --icons --group-directories-first"
+    alias ls="$eza"
+    alias ll="$eza -l --sort=newest"
+    alias la="$eza -la --sort=newest"
+    alias lt="$eza -aT --level=3 --ignore-glob=.git"
 
-# Changing "ls" to "eza"
-alias ls="eza -al --color=always --icons --group-directories-first -snewest"
-alias la="eza -a --color=always --icons --group-directories-first -snewest"
-alias ll="eza -l --color=always --icons --group-directories-first -snewest"
-alias lt="eza -aT --level=3 --color=always --icons --group-directories-first -snewest"
+    alias vim="nvim"
 
-# Use Extended Regular Expressions (ERE) as default
-alias grep="grep -E"
+    # Brew upgrade and cleanup
+    alias brew-up="brew upgrade && brew cleanup --prune=all"
+    alias brewfile="brew bundle --file=~/.config/brew/Brewfile"
 
-# Brew upgrade and cleanup
-alias brew-up="brew upgrade && brew cleanup --prune=all"
+    # Dotfiles bare repo
+    alias dot='git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 
-# Dotfiles bare repo
-alias dot="git --git-dir=\$HOME/.dotfiles/ --work-tree=\$HOME"
-
-# Brewfile
-alias brewfile="brew bundle --file=~/.config/brew/Brewfile"
-
-# Set up fzf key bindings
-fzf --fish | source
-
-# Starship
-starship init fish | source
-
-# zoxide
-zoxide init fish | source
-
+    # Bear
+    alias bearcli="/Applications/Bear.app/Contents/MacOS/bearcli"
+end
