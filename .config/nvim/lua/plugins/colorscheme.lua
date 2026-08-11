@@ -10,19 +10,3 @@ return {
 		vim.cmd.colorscheme("solarized-osaka")
 	end,
 }
-
--- return {
--- 	"folke/tokyonight.nvim",
--- 	lazy = false,
--- 	priority = 1000,
--- 	opts = {
--- 		style = "storm",
--- 		styles = {
--- 			comments = { italic = true },
--- 			keywords = { italic = true },
--- 		},
--- 	},
--- 	init = function()
--- 		vim.cmd.colorscheme("tokyonight-storm")
--- 	end,
--- }

@@ -1,5 +1,5 @@
 return {
-	"williamboman/mason.nvim",
+	"mason-org/mason.nvim",
 	dependencies = {
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 	},
@@ -10,22 +10,20 @@ return {
 				-- LSP servers
 				"lua-language-server",
 				"pyright",
+				"ruff",
 				"typescript-language-server",
 				"bash-language-server",
 				"marksman",
 				"yaml-language-server",
-				"kotlin-language-server",
-				"jdtls",
+				-- kotlin-lsp comes from brew (cask "kotlin-lsp")
 				-- Formatters
 				"stylua",
-				"black",
-				"isort",
 				"prettierd",
 				"shfmt",
-				-- Note: swiftformat and ktlint not in Mason
-				-- Install manually: brew install swiftformat ktlint
+				-- swift-format ships with the Swift/Xcode toolchain (`swift format`).
+				-- ktlint is not in Mason: brew install ktlint
 			},
-			auto_update = true,
+			auto_update = false,
 			run_on_start = true,
 		})
 	end,

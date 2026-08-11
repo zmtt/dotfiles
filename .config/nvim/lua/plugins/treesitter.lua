@@ -1,10 +1,12 @@
+-- Main branch (the rewrite): master is frozen upstream. Parsers are installed
+-- explicitly below; highlighting/indent are enabled per buffer via autocmd.
 return {
 	"nvim-treesitter/nvim-treesitter",
-	branch = "master",
+	branch = "main",
 	lazy = false,
 	build = ":TSUpdate",
-	opts = {
-		ensure_installed = {
+	config = function()
+		require("nvim-treesitter").install({
 			"c",
 			"lua",
 			"vim",
@@ -22,25 +24,21 @@ return {
 			"java",
 			"kotlin",
 			"swift",
-		},
-		sync_install = false,
-		auto_install = true,
-		highlight = {
-			enable = true,
-			disable = function(lang, buf)
+		})
+
+		vim.api.nvim_create_autocmd("FileType", {
+			group = vim.api.nvim_create_augroup("treesitter-start", { clear = true }),
+			callback = function(ev)
 				local max_filesize = 100 * 1024 -- 100 KB
-				local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+				local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(ev.buf))
 				if ok and stats and stats.size > max_filesize then
-					return true
+					return
+				end
+				-- No-op for filetypes without an installed parser
+				if pcall(vim.treesitter.start, ev.buf) then
+					vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
 				end
 			end,
-			additional_vim_regex_highlighting = false,
-		},
-		indent = {
-			enable = true,
-		},
-	},
-	config = function(_, opts)
-		require("nvim-treesitter.configs").setup(opts)
+		})
 	end,
 }
