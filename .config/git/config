@@ -12,3 +12,7 @@
 [includeIf "gitdir:~/Developer/personal/"]
     path = ~/.config/git/personal.conf
 
+
+[delta]
+	syntax-theme = Umber
+	line-numbers = true
