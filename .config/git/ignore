@@ -1,5 +1,6 @@
-**/.claude/settings.local.json
-# **/*.md
+.claude
+#**/.claude/settings.local.json
+**/*.md
 **/*.txt
 .jj/
 **/*/build
@@ -40,3 +41,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Kotlin LSP local cache (per-project SQLite, never wanted in source control)
+kls_database.db
