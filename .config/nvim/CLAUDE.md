@@ -19,7 +19,7 @@ This is a Neovim configuration repository using the lazy.nvim plugin manager. Th
 - **Leader key**: Space ` ` (set in lua/config/lazy.lua:21)
 - **Local leader**: Space ` ` (set in lua/config/lazy.lua:27)
 - **Plugin manager**: lazy.nvim with automatic update checking enabled
-- **Default colorscheme**: solarized-osaka.nvim (craftzdog/solarized-osaka.nvim)
+- **Default colorscheme**: umber — generated into `colors/` by `~/.config/umber/neovim.py` (never edit the generated files; edit the generator and rebuild). Variants: umber, umber-night, umber-light. If the generated colors are missing, nvim falls back to the built-in habamax.
 
 ## Plugin Development
 
@@ -71,6 +71,9 @@ This config uses the modern Neovim 0.11+ LSP approach:
 - No `mason-lspconfig.nvim` needed — Mason just installs binaries
 
 ## Session History
+
+### 2026-08-14: Umber Colorscheme
+Built a Neovim port of the user's Umber palette (the Ghostty theme). Generator `~/.config/umber/neovim.py` reads `palette.json`, derives editor-only colors in OKLrCH (surface ramp, diff washes, ember search wash), audits contrast floors before writing, and emits `colors/{umber,umber-night,umber-light}.lua` plus matching `lua/lualine/themes/` files. Default colorscheme switched to umber (set in `lua/config/lazy.lua` after lazy setup); solarized-osaka removed; the fallback is the built-in habamax.
 
 ### 2026-08-05: Swift Development Setup
 Followed swift.org's "Zero to Swift Neovim" guide. sourcekit-lsp, treesitter, and blink.cmp completion were already in place (blink.cmp is the modern replacement for the guide's nvim-cmp).
