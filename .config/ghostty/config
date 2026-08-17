@@ -1,11 +1,33 @@
 # Theme
-theme = "Solarized Osaka Dark"
+theme = dark:umber,light:umber-light
+
+# Guard for apps that pick their own colours; never fires on this theme.
+minimum-contrast = 2.5
+
+# Default 0.5 puts faint text at 2.70:1 on the light ground.
+faint-opacity = 0.72
 
 # Font
-font-size = 14.0
+font-family = "MonaspiceNe Nerd Font Mono"
+font-size = 15.0
+
+# Real weight rather than font-thicken, which smears strokes to fake it.
+font-style = Medium
+font-thicken = false
+
+# Never -calt: Monaspace runs texture healing through it.
+font-feature = -liga
+font-feature = -dlig
+
+# Spacing
+adjust-cell-height = 12%
+window-padding-x = 12
+window-padding-y = 8
+window-padding-balance = true
 
 # Cursor
 cursor-style = block
+cursor-style-blink = true
 shell-integration-features = no-cursor,no-sudo,title
 
 # Window Size

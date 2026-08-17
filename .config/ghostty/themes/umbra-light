@@ -1,0 +1,26 @@
+# Umbra Light - accents computed in OKLCH at fixed
+# lightness and chroma so no colour outweighs another. Verified against WCAG.
+
+background = #f7f4ef
+foreground = #313741
+cursor-color = #252931
+cursor-text = #f7f4ef
+selection-background = #e3ddd2
+selection-foreground = #313741
+
+palette = 0=#252931
+palette = 1=#9c4646
+palette = 2=#267944
+palette = 3=#805f00
+palette = 4=#3366a5
+palette = 5=#854b88
+palette = 6=#00727c
+palette = 7=#b8bec8
+palette = 8=#696e78
+palette = 9=#833435
+palette = 10=#106433
+palette = 11=#684c00
+palette = 12=#22518c
+palette = 13=#6e3972
+palette = 14=#005d65
+palette = 15=#e5e8ee
