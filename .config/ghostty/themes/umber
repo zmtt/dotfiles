@@ -1,0 +1,28 @@
+# Umber — an earth palette.
+# Accents placed in OKLrCH. Warm hues carry more chroma than cool ones so the
+# palette has a centre of gravity; chroma is further weighted by how each slot
+# is actually used, so persistent chrome never outshouts semantic colour.
+
+background = #171614
+foreground = #d4c7be
+cursor-color = #ffa475
+cursor-text = #171614
+selection-background = #3c2d21
+selection-foreground = #d4c7be
+
+palette = 0=#42362e
+palette = 1=#e5806b
+palette = 2=#92bc84
+palette = 3=#e0a049
+palette = 4=#88a7c8
+palette = 5=#c394b2
+palette = 6=#88c5c5
+palette = 7=#c7bdb5
+palette = 8=#8a7f75
+palette = 9=#fa9b86
+palette = 10=#acd39f
+palette = 11=#f6ba6d
+palette = 12=#a2bfde
+palette = 13=#d9acc9
+palette = 14=#a4dcdc
+palette = 15=#e8e1dc
