@@ -1,0 +1,10 @@
+{
+  "name": "Umber",
+  "base": "dark",
+  "overrides": {
+    "userMessageBackground": "#342c26",
+    "userMessageBackgroundHover": "#493f37",
+    "inverseText": "#e8e1dc",
+    "briefLabelYou": "#ffa475"
+  }
+}
