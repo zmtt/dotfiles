@@ -52,11 +52,15 @@ def build(V, x, y, w, h, title):
     out.append(f'<text x="{x+78}" y="{y+22}" font-family="{FONT}" font-weight="{WEIGHT}" font-size="12" fill="{c(8)}" letter-spacing="1.4">{esc(title)}</text>')
     ty = y + 60
     for line in rows:
-        out.append(f'<text x="{x+22}" y="{ty}" font-family="{FONT}" font-weight="{WEIGHT}" font-size="14" xml:space="preserve" fill="{fg}">')
+        # Under xml:space="preserve" any whitespace between tspans renders as a
+        # space, so a line's spans must be joined with nothing between them.
+        spans = []
         for seg, k in line:
             fill = fg if k is None else (faint if k=="faint" else (V["cursor"] if k=="cursor" else c(k)))
-            out.append(f'<tspan fill="{fill}">{esc(seg)}</tspan>')
-        out.append('</text>'); ty += 23
+            spans.append(f'<tspan fill="{fill}">{esc(seg)}</tspan>')
+        out.append(f'<text x="{x+22}" y="{ty}" font-family="{FONT}" font-weight="{WEIGHT}" font-size="14" xml:space="preserve" fill="{fg}">'
+                   + "".join(spans) + '</text>')
+        ty += 23
     return "\n".join(out)
 
 W,H = 620, 570

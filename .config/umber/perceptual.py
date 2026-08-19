@@ -43,7 +43,7 @@ def solve_lr(target, bg, C, H):
     The bracket is the full Lr range. A narrower one silently returns its own
     bound when the target is unreachable, which reads as a solved value and
     makes the target look like a knob when it is not: dark slot 0 (target 1.55)
-    and night slot 0 (target 1.50) both used to emit #4f433a at 1.891:1.
+    used to emit #4f433a at 1.891:1.
     """
     dark = lum(bg) < 0.18
     lo, hi = (0.0, 1.0)

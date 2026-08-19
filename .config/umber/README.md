@@ -14,7 +14,7 @@ theme file — the next rebuild overwrites it.
 | Comments dim, or an accent too loud | `build.py` `targets`, or `model.py` `USAGE` | `build.py`, then every emitter |
 | Terminal font, spacing, ligatures, cursor | `~/.config/ghostty/config` *(source)* | reload Ghostty |
 | Shell syntax colours: commands, errors | `~/.config/fish/conf.d/umber-theme.fish` *(source)* | new shell |
-| Day/night switching (light follows macOS) | `~/.config/fish/functions/umber.fish` *(source)* | new shell |
+| Variant switching (light follows macOS) | `~/.config/fish/functions/umber.fish` *(source)* | new shell |
 | **Any editor's** syntax: keywords, types, strings | `editor.py` | the affected emitter |
 | Neovim UI: floats, diffs, statusline | `neovim.py` | `python3 neovim.py` |
 | Android Studio editor pane | `editor.py` or `intellij.py` | `python3 intellij.py && python3 jetbrains-ui.py`, restart |
@@ -29,7 +29,7 @@ theme file — the next rebuild overwrites it.
 Everything here is **output**. Editing it is pointless; the next rebuild wins.
 
 ```
-~/.config/ghostty/themes/umber, umber-night, umber-light
+~/.config/ghostty/themes/umber, umber-light
 ~/.config/nvim/colors/umber*.lua
 ~/.config/nvim/lua/lualine/themes/umber*.lua
 ~/.config/bat/themes/Umber*.tmTheme
@@ -48,7 +48,7 @@ These are **source**, edit directly:
 ~/.config/umber/*.py                       the generators
 ~/.config/ghostty/config                   font, spacing, ligatures, cursor
 ~/.config/fish/conf.d/umber-theme.fish     shell syntax colours
-~/.config/fish/functions/umber.fish        the day/night/light switcher
+~/.config/fish/functions/umber.fish        the variant switcher
 ~/.claude/statusline-command.py            the status line
 ~/.config/bat/config                       selects the bat/delta theme
 ~/.config/git/config                       [delta] syntax-theme
@@ -76,7 +76,7 @@ Android Studio's two emitters resolve the **newest** `AndroidStudio*` config
 directory at runtime, so a Studio upgrade needs a rerun, not a path edit.
 
 ```
-python3 build.py          # the three Ghostty themes
+python3 build.py          # the two Ghostty themes
 python3 audit.py          # every contrast floor and the salience order
 python3 claude-chrome.py  # ~/.claude/themes/umber{,-light}.json
 python3 neovim.py         # ~/.config/nvim/colors + lualine themes
@@ -191,7 +191,7 @@ blue are mostly chrome: branch names, task labels. Persistent chrome must never
 be the loudest thing on screen.
 
 **Two different metrics, checked separately.** WCAG contrast measures whether
-text can be *read* (floor 4.5:1, or 3.3:1 for the night variant). Chroma
+text can be *read* (floor 4.5:1). Chroma
 measures whether it *catches the eye*. `audit.py` checks both — a change that
 improves one can silently break the other.
 

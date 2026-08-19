@@ -8,8 +8,8 @@ def blend(f,b,a):
     F=[int(f[i:i+2],16) for i in (1,3,5)]; B=[int(b[i:i+2],16) for i in (1,3,5)]
     return '#%02x%02x%02x'%tuple(round(F[k]*a+B[k]*(1-a)) for k in range(3))
 _fail = []
-FLOOR = {"dark":4.5, "light":4.5, "night":3.3}
-for v in ("dark","night","light"):
+FLOOR = {"dark":4.5, "light":4.5}
+for v in ("dark","light"):
     V=P[v]; bg=V["background"]; f=FLOOR[v]
     text=[i for i in range(16) if i not in ((0,7,15) if v=="light" else (0,))]
     checks=[("body",contrast(V["foreground"],bg)),

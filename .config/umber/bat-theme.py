@@ -89,8 +89,7 @@ def build(variant, name):
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     made = []
-    for variant, name in (("dark", "Umber"), ("night", "Umber Night"),
-                          ("light", "Umber Light")):
+    for variant, name in (("dark", "Umber"), ("light", "Umber Light")):
         if variant not in P:
             continue
         theme = build(variant, name)

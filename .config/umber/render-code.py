@@ -45,13 +45,17 @@ def panel(V, X, x, y, w, h, title):
            f'<text x="{x+22}" y="{y+30}" font-family="{FONT}" font-size="12" fill="{com}" letter-spacing="1.3">{esc(title)}</text>']
     ty = y + 66
     for line in CODE:
-        out.append(f'<text x="{x+22}" y="{ty}" font-family="{FONT}" font-size="14" xml:space="preserve">')
+        # Under xml:space="preserve" any whitespace between tspans renders as a
+        # space, so a line's spans must be joined with nothing between them.
+        spans = []
         for tag, txt in [t for t in line if isinstance(t, tuple)]:
             role = KEY[tag]
             col = fg if role == "fg" else (com if role == "comment" else X[role])
             it = ' font-style="italic"' if role == "comment" else ''
-            out.append(f'<tspan fill="{col}"{it}>{esc(txt)}</tspan>')
-        out.append('</text>'); ty += 26
+            spans.append(f'<tspan fill="{col}"{it}>{esc(txt)}</tspan>')
+        out.append(f'<text x="{x+22}" y="{ty}" font-family="{FONT}" font-size="14" xml:space="preserve">'
+                   + "".join(spans) + '</text>')
+        ty += 26
     return "\n".join(out)
 
 V = P["dark"]

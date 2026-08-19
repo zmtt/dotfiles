@@ -19,7 +19,7 @@ This is a Neovim configuration repository using the lazy.nvim plugin manager. Th
 - **Leader key**: Space ` ` (set in lua/config/lazy.lua:21)
 - **Local leader**: Space ` ` (set in lua/config/lazy.lua:27)
 - **Plugin manager**: lazy.nvim with automatic update checking enabled
-- **Default colorscheme**: umber — generated into `colors/` by `~/.config/umber/neovim.py` (never edit the generated files; edit the generator and rebuild). Variants: umber, umber-night, umber-light. If the generated colors are missing, nvim falls back to the built-in habamax.
+- **Default colorscheme**: umber — generated into `colors/` by `~/.config/umber/neovim.py` (never edit the generated files; edit the generator and rebuild). Variants: umber, umber-light. If the generated colors are missing, nvim falls back to the built-in habamax.
 
 ## Plugin Development
 

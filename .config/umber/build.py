@@ -33,12 +33,8 @@ def build(bg_hex, nh, acc_L, br_L, cscale, br_cscale, targets, sel_L, cur_L):
     return P, notes
 
 DARK, dn = build(nh=60, acc_L=0.745, br_L=0.820,
-    cscale=1.0, br_cscale=0.92, sel_L=0.310, cur_L=0.800, bg_hex="#171614",
+    cscale=1.0, br_cscale=0.92, sel_L=0.310, cur_L=0.750, bg_hex="#171614",
     targets={"fg":11.0, "s0":1.55, "s8":4.60, "s7":9.8, "s15":14.0})
-
-NIGHT, nn = build(nh=60, acc_L=0.655, br_L=0.712,
-    cscale=0.90, br_cscale=0.84, sel_L=0.295, cur_L=0.715, bg_hex="#171614",
-    targets={"fg":8.0, "s0":1.50, "s8":4.20, "s7":7.2, "s15":9.8})
 
 LIGHT, ln = build(nh=66, acc_L=0.500, br_L=0.430,
     cscale=1.05, br_cscale=1.0, sel_L=0.890, cur_L=0.520, bg_hex="#f8f7f5",
@@ -60,14 +56,14 @@ def report(label, P, notes):
         w = min(delta_e(acc[a],acc[b],kind) for a,b in itertools.combinations(range(6),2))
         print(f"  {kind:<13} worst dE {w:.3f}")
 
-report("EARTH dark", DARK, dn); report("NIGHT", NIGHT, nn); report("EARTH light", LIGHT, ln)
+report("EARTH dark", DARK, dn); report("EARTH light", LIGHT, ln)
 
 # Gate before writing anything, the way the editor emitters do. Writing first
 # and reporting after cannot fail a run, and leaves palette.json — the source
 # every other emitter reads — ahead of the themes the terminal is using.
-FLOOR = {"dark": 4.5, "night": 3.3, "light": 4.5}
+FLOOR = {"dark": 4.5, "light": 4.5}
 fail = []
-for label, P in (("dark", DARK), ("night", NIGHT), ("light", LIGHT)):
+for label, P in (("dark", DARK), ("light", LIGHT)):
     bg, sel, f = P["background"], P["selection"], FLOOR[label]
     text = [i for i in range(16) if i not in ((0, 7, 15) if label == "light" else (0,))]
     checks = [("fg/bg", contrast(P["foreground"], bg), f),
@@ -85,11 +81,11 @@ for label, P in (("dark", DARK), ("night", NIGHT), ("light", LIGHT)):
 enforce(fail)
 
 write_atomic(_os.path.join(_HERE, "palette.json"),
-             json.dumps({"dark": DARK, "night": NIGHT, "light": LIGHT}, indent=1))
+             json.dumps({"dark": DARK, "light": LIGHT}, indent=1))
 
 OUT = os.path.expanduser("~/.config/ghostty/themes")
 os.makedirs(OUT, exist_ok=True)
-for fname, P in (("umber", DARK), ("umber-night", NIGHT), ("umber-light", LIGHT)):
+for fname, P in (("umber", DARK), ("umber-light", LIGHT)):
     hdr = (f"# Umber{' Light' if 'light' in fname else ''} — an earth palette.\n"
            "# Accents placed in OKLrCH. Warm hues carry more chroma than cool ones so the\n"
            "# palette has a centre of gravity; chroma is further weighted by how each slot\n"
@@ -99,4 +95,4 @@ for fname, P in (("umber", DARK), ("umber-night", NIGHT), ("umber-light", LIGHT)
             f"selection-background = {P['selection']}\nselection-foreground = {P['foreground']}\n\n")
     write_atomic(os.path.join(OUT, fname),
                  hdr + body + "\n".join(f"palette = {i}={P[i]}" for i in range(16)) + "\n")
-print("wrote umber, umber-night, umber-light")
+print("wrote umber, umber-light")

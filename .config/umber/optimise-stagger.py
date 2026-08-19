@@ -31,9 +31,7 @@ CVDS = ("deuteranopia", "protanopia", "tritanopia")
 MAX_SPREAD = 0.095
 SAMPLES = 40000
 
-# Accent lightness per ground, mirroring build.py's acc_L for each variant. The
-# night variant shares the dark ground and its accents sit between the two, so
-# bounding the search on dark and light covers it.
+# Accent lightness per ground, mirroring build.py's acc_L for each variant.
 GROUNDS = {"dark": l_to_lr(0.745), "light": l_to_lr(0.500)}
 
 

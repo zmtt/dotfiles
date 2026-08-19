@@ -138,8 +138,8 @@ def theme(V, S):
         "DVTScrollbarMarkerWarningColor": col(c[3]),
     }
 
-VARIANTS = (("Umber", P["dark"]), ("Umber Night", P["night"]), ("Umber Light", P["light"]))
-FLOOR = {"Umber": 4.5, "Umber Night": 3.3, "Umber Light": 4.5}
+VARIANTS = (("Umber", P["dark"]), ("Umber Light", P["light"]))
+FLOOR = {"Umber": 4.5, "Umber Light": 4.5}
 
 OUT = os.path.expanduser("~/Library/Developer/Xcode/UserData/FontAndColorThemes")
 os.makedirs(OUT, exist_ok=True)
@@ -166,4 +166,4 @@ enforce(failures)
 for name, V, S in built:
     write_atomic(os.path.join(OUT, f"{name}.xccolortheme"),
                  plistlib.dumps(theme(V, S), sort_keys=True))
-print(f"wrote 3 themes -> {OUT}")
+print(f"wrote {len(built)} themes -> {OUT}")
