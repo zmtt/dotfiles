@@ -233,7 +233,7 @@ HDR = ("-- Umber{sfx} — an earth palette.\n"
        "-- them and no role is muted relative to another.\n")
 
 def render(name, background, V, S):
-    sfx = {"umber": "", "umber-night": " Night", "umber-light": " Light"}[name]
+    sfx = {"umber": "", "umber-light": " Light"}[name]
     out = [HDR.format(sfx=sfx),
            f'vim.o.background = "{background}"',
            'vim.cmd("highlight clear")',
@@ -262,9 +262,8 @@ def render_lualine(name, V, S):
             f'    b = {sec(c[8], S["line"])},', f'    c = {sec(c[8], S["line"])},', "  },", "}"]
     return "\n".join(out) + "\n"
 
-VARIANTS = (("umber", "dark", P["dark"]), ("umber-night", "dark", P["night"]),
-            ("umber-light", "light", P["light"]))
-FLOOR = {"umber": 4.5, "umber-night": 3.3, "umber-light": 4.5}
+VARIANTS = (("umber", "dark", P["dark"]), ("umber-light", "light", P["light"]))
+FLOOR = {"umber": 4.5, "umber-light": 4.5}
 
 COLORS = os.path.expanduser("~/.config/nvim/colors")
 THEMES = os.path.expanduser("~/.config/nvim/lua/lualine/themes")
@@ -292,4 +291,4 @@ enforce(failures)
 for name, background, V, S in built:
     write_atomic(os.path.join(COLORS, f"{name}.lua"), render(name, background, V, S))
     write_atomic(os.path.join(THEMES, f"{name}.lua"), render_lualine(name, V, S))
-print(f"wrote 3 colorschemes -> {COLORS}, 3 lualine themes -> {THEMES}")
+print(f"wrote {len(built)} colorschemes -> {COLORS}, {len(built)} lualine themes -> {THEMES}")

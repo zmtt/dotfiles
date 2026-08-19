@@ -184,7 +184,6 @@ if __name__ == "__main__":
 
     built = []
     for variant, name, icls in (("dark", "Umber", "Umber.icls"),
-                                ("night", "Umber Night", "Umber Night.icls"),
                                 ("light", "Umber Light", "Umber Light.icls")):
         if variant not in P:
             continue

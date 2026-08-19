@@ -167,9 +167,8 @@ def render(name, parent, V, S):
     out += ["  </attributes>", "</scheme>"]
     return "\n".join(out) + "\n"
 
-VARIANTS = (("Umber", "Darcula", P["dark"]), ("Umber Night", "Darcula", P["night"]),
-            ("Umber Light", "Default", P["light"]))
-FLOOR = {"Umber": 4.5, "Umber Night": 3.3, "Umber Light": 4.5}
+VARIANTS = (("Umber", "Darcula", P["dark"]), ("Umber Light", "Default", P["light"]))
+FLOOR = {"Umber": 4.5, "Umber Light": 4.5}
 
 # Audit first, write only if every floor holds — never ship a bad ramp into the
 # live config.
@@ -193,4 +192,4 @@ OUT = os.path.join(config_dir(), "colors")
 os.makedirs(OUT, exist_ok=True)
 for name, parent, V, S in built:
     write_atomic(os.path.join(OUT, f"{name}.icls"), render(name, parent, V, S))
-print(f"wrote 3 schemes -> {OUT}")
+print(f"wrote {len(built)} schemes -> {OUT}")

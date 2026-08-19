@@ -1,4 +1,4 @@
-function umber --description "Switch the Ghostty Umber variant: auto, day, or night"
+function umber --description "Switch the Ghostty Umber variant: auto or day"
     set -l config ~/.config/ghostty/config
 
     set -l value
@@ -10,11 +10,8 @@ function umber --description "Switch the Ghostty Umber variant: auto, day, or ni
         case day
             set value umber
             set label day
-        case night
-            set value umber-night
-            set label "night (lower peak luminance, for an unlit room)"
         case '*'
-            echo "usage: umber [auto|day|night]" >&2
+            echo "usage: umber [auto|day]" >&2
             return 1
     end
 
