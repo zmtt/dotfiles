@@ -1,6 +1,6 @@
 from perceptual import lch, solve, to_linear, write_atomic
 from editor import syntax, surfaces
-from palette import contrast, lum, enforce
+from palette import contrast, enforce
 import json, os, plistlib
 import os as _os
 _HERE = _os.path.dirname(_os.path.abspath(__file__))
@@ -14,13 +14,15 @@ P = json.load(open(_os.path.join(_HERE, "palette.json")))
 # Syntax colours come from editor.py, for the reason documented there: the
 # terminal mutes cool hues as chrome, which in code would leave keywords,
 # functions and types as the palette's three most desaturated colours. Xcode
-# additionally distinguishes user symbols from SDK ones, so each system variant
-# is the same hue lifted to a higher contrast rather than a different colour.
+# additionally distinguishes user symbols from SDK ones. SDK symbols are the
+# higher-frequency class, so per the salience law the sys()-derived variants
+# keep the user hue one contrast step toward the ground, leaving the user's
+# own API as the full-strength accent.
 def roles(V):
     fg = V["foreground"]; c = {i: V[str(i)] for i in range(16)}
     X = syntax(V)
     bg = V["background"]
-    lift = 1.28 if lum(bg) < 0.18 else 0.80   # system symbols read one step up
+    lift = 0.80
 
     def sys(role):
         L, C, H = lch(X[role])
@@ -49,8 +51,11 @@ def roles(V):
         "identifier.function.system": sys("function"),
         "identifier.constant": X["constant"],
         "identifier.constant.system": sys("constant"),
-        "identifier.variable": fg,
-        "identifier.variable.system": X["member"],
+        # Xcode's "variables" are project globals, ivars and properties, not
+        # locals (locals render as plain), so they take the member colour like
+        # fields do in the neovim and intellij emitters.
+        "identifier.variable": X["member"],
+        "identifier.variable.system": sys("member"),
         "identifier.macro": X["keyword"],
         "identifier.macro.system": sys("keyword"),
         "regex": X["escape"],
@@ -112,14 +117,17 @@ def theme(V, S):
         "DVTConsoleExectuableInputTextFont": BASE,
         "DVTConsoleExectuableOutputTextColor": col(fg),
         "DVTConsoleExectuableOutputTextFont": BASE,
+        # The markup panel is editor surface, so it takes the editor set (the
+        # console keeps terminal slots: it is a terminal). Inline code matches
+        # the markup.code syntax key, links match the url key.
         "DVTMarkupTextBackgroundColor": col(S["panel"]),
-        "DVTMarkupTextBorderColor": col(c[0]),
+        "DVTMarkupTextBorderColor": col(S["over"]),
         "DVTMarkupTextNormalColor": col(fg),
-        "DVTMarkupTextPrimaryHeadingColor": col(c[3]),
-        "DVTMarkupTextSecondaryHeadingColor": col(c[3]),
-        "DVTMarkupTextOtherHeadingColor": col(c[3]),
-        "DVTMarkupTextLinkColor": col(c[4]),
-        "DVTMarkupTextInlineCodeColor": col(c[6]),
+        "DVTMarkupTextPrimaryHeadingColor": col(X["constant"]),
+        "DVTMarkupTextSecondaryHeadingColor": col(X["constant"]),
+        "DVTMarkupTextOtherHeadingColor": col(X["constant"]),
+        "DVTMarkupTextLinkColor": col(X["function"]),
+        "DVTMarkupTextInlineCodeColor": col(X["type"]),
         "DVTMarkupTextEmphasisColor": col(fg),
         "DVTMarkupTextStrongColor": col(fg),
         "DVTMarkupTextNormalFont": UIFONT % 11.0,
@@ -156,6 +164,10 @@ for name, V in VARIANTS:
               for k, v in roles(V).items()]
     checks.append(("fg/line", contrast(V["foreground"], S["line"]), f))
     checks.append(("fg/panel", contrast(V["foreground"], S["panel"]), f))
+    X = syntax(V)
+    checks += [(f"markup.{n}/panel", contrast(X[r], S["panel"]), f)
+               for n, r in (("heading", "constant"), ("link", "function"),
+                            ("code", "type"))]
     bad = [n for n, x, floor in checks if x < floor]
     worst = min(checks, key=lambda t: t[1] / t[2])
     print(f"{name:<12} worst {worst[0]} {worst[1]:.2f} (floor {worst[2]:.2f})  "
