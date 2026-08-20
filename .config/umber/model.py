@@ -28,6 +28,14 @@ HUES = {"red": 33.0, "green": 138.0, "yellow": 72.0,
 STAGGER = {"red": -0.044, "green": +0.005, "yellow": +0.009,
            "blue": -0.031, "magenta": -0.030, "cyan": +0.043}
 
+# No two colours that carry distinct meaning may be closer than this for any
+# dichromat, measured by perceptual.worst_separation. It is a collapse detector,
+# not an optimality target: the floor sits below what the staggers reach, so
+# ordinary retuning does not trip it. The case it exists to catch is a set of
+# roles at one flat lightness, which passes every contrast check while two of
+# its hues sit a dE of 0.004 apart for a dichromat.
+SEPARATION_FLOOR = 0.035
+
 def chroma_for(hue, scale=1.0):
     warmth = (math.cos(math.radians(hue - EMBER)) + 1) / 2
     return (C_COOL + (C_WARM - C_COOL) * warmth) * USAGE.get(hue, 1.0) * scale

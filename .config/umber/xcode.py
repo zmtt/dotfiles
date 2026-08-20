@@ -1,5 +1,5 @@
 from perceptual import lch, solve, to_linear, write_atomic
-from editor import syntax, surfaces
+from editor import syntax, surfaces, audit
 from palette import contrast, enforce
 import json, os, plistlib
 import os as _os
@@ -18,6 +18,20 @@ P = json.load(open(_os.path.join(_HERE, "palette.json")))
 # higher-frequency class, so per the salience law the sys()-derived variants
 # keep the user hue one contrast step toward the ground, leaving the user's
 # own API as the full-strength accent.
+# The lifted system variants may not drop through the readable floor: the
+# staggered parents sit at different heights, and a fixed multiplier under the
+# lowest of them lands below 4.5. Solved to the floor plus a hair instead.
+SYS_FLOOR = 4.6
+
+
+def on_panel(V, S, X, role):
+    """Re-solve an editor accent against the doc panel, keeping the contrast it
+    holds on the editor background. The panel is a step below the ground, so
+    reusing the editor hex verbatim silently loses that step."""
+    L, C, H = lch(X[role])
+    return solve(contrast(X[role], V["background"]), S["panel"], C, H)
+
+
 def roles(V):
     fg = V["foreground"]; c = {i: V[str(i)] for i in range(16)}
     X = syntax(V)
@@ -26,7 +40,7 @@ def roles(V):
 
     def sys(role):
         L, C, H = lch(X[role])
-        return solve(contrast(X[role], bg) * lift, bg, C, H)
+        return solve(max(contrast(X[role], bg) * lift, SYS_FLOOR), bg, C, H)
 
     return {
         "plain": fg,
@@ -119,15 +133,18 @@ def theme(V, S):
         "DVTConsoleExectuableOutputTextFont": BASE,
         # The markup panel is editor surface, so it takes the editor set (the
         # console keeps terminal slots: it is a terminal). Inline code matches
-        # the markup.code syntax key, links match the url key.
+        # the markup.code syntax key, links match the url key. The panel sits a
+        # step below the editor ground, so each accent is re-solved against it
+        # at the contrast it holds on the editor bg — same perceived strength,
+        # no falling through the floor on the darker ground.
         "DVTMarkupTextBackgroundColor": col(S["panel"]),
         "DVTMarkupTextBorderColor": col(S["over"]),
         "DVTMarkupTextNormalColor": col(fg),
-        "DVTMarkupTextPrimaryHeadingColor": col(X["constant"]),
-        "DVTMarkupTextSecondaryHeadingColor": col(X["constant"]),
-        "DVTMarkupTextOtherHeadingColor": col(X["constant"]),
-        "DVTMarkupTextLinkColor": col(X["function"]),
-        "DVTMarkupTextInlineCodeColor": col(X["type"]),
+        "DVTMarkupTextPrimaryHeadingColor": col(on_panel(V, S, X, "constant")),
+        "DVTMarkupTextSecondaryHeadingColor": col(on_panel(V, S, X, "constant")),
+        "DVTMarkupTextOtherHeadingColor": col(on_panel(V, S, X, "constant")),
+        "DVTMarkupTextLinkColor": col(on_panel(V, S, X, "function")),
+        "DVTMarkupTextInlineCodeColor": col(on_panel(V, S, X, "type")),
         "DVTMarkupTextEmphasisColor": col(fg),
         "DVTMarkupTextStrongColor": col(fg),
         "DVTMarkupTextNormalFont": UIFONT % 11.0,
@@ -165,10 +182,11 @@ for name, V in VARIANTS:
     checks.append(("fg/line", contrast(V["foreground"], S["line"]), f))
     checks.append(("fg/panel", contrast(V["foreground"], S["panel"]), f))
     X = syntax(V)
-    checks += [(f"markup.{n}/panel", contrast(X[r], S["panel"]), f)
+    checks += [(f"markup.{n}/panel", contrast(on_panel(V, S, X, r), S["panel"]), f)
                for n, r in (("heading", "constant"), ("link", "function"),
                             ("code", "type"))]
     bad = [n for n, x, floor in checks if x < floor]
+    bad += [f"syntax:{k}" for k, _ in audit(V, X, f)]
     worst = min(checks, key=lambda t: t[1] / t[2])
     print(f"{name:<12} worst {worst[0]} {worst[1]:.2f} (floor {worst[2]:.2f})  "
           f"{'PASS' if not bad else 'BELOW: ' + str(bad)}")

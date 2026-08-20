@@ -1,4 +1,5 @@
 import contextlib
+import itertools
 import math
 import os
 import tempfile
@@ -124,3 +125,34 @@ def delta_e(hx1, hx2, kind=None):
         return linear_to_oklab(*(simulate(h, kind) if kind else to_linear(h)))
     a, b = lab(hx1), lab(hx2)
     return math.dist(a, b)
+
+
+CVD_KINDS = tuple(CVD)
+
+
+def worst_separation(colours, kinds=CVD_KINDS):
+    """Closest pair among `colours`, across every simulated deficiency.
+
+    Takes a {name: hex} mapping and returns (dE, (name_a, name_b, kind)).
+
+    Near-uniform lightness is what collapses distinct hues for a dichromat, so
+    this single measurement is what both stagger solvers maximise and what both
+    gates enforce. It lived only inside optimise-stagger.py, which meant the
+    editor accents — derived by a different path, with no stagger at all — were
+    never measured by it and shipped at dE 0.004 to 0.007.
+    """
+    names = list(colours)
+    # Convert once per colour per deficiency, not once per pair. delta_e converts
+    # both operands on every call, so six colours across three deficiencies cost
+    # 90 conversions where 18 suffice, and this is the inner loop of both stagger
+    # solvers.
+    lab = {(n, k): linear_to_oklab(*(simulate(colours[n], k) if k
+                                     else to_linear(colours[n])))
+           for n in names for k in kinds}
+    worst, pair = float("inf"), None
+    for kind in kinds:
+        for a, b in itertools.combinations(names, 2):
+            d = math.dist(lab[(a, kind)], lab[(b, kind)])
+            if d < worst:
+                worst, pair = d, (a, b, kind)
+    return worst, pair

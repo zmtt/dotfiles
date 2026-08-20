@@ -2,7 +2,8 @@ import json, math
 import os as _os
 _HERE = _os.path.dirname(_os.path.abspath(__file__))
 from palette import contrast, lum
-from perceptual import to_linear, linear_to_oklab
+from perceptual import to_linear, linear_to_oklab, worst_separation
+from model import SEPARATION_FLOOR
 P = json.load(open(_os.path.join(_HERE, "palette.json")))
 def blend(f,b,a):
     F=[int(f[i:i+2],16) for i in (1,3,5)]; B=[int(b[i:i+2],16) for i in (1,3,5)]
@@ -25,9 +26,13 @@ for v in ("dark","light"):
         L,a,b=linear_to_oklab(*to_linear(V[str(i)])); ch[n]=math.hypot(a,b)
     ok = min(ch['red'],ch['yellow']) > max(ch['cyan'],ch['blue'],ch['magenta'])
     if not ok: _fail.append(f"{v}:salience")
+    sep, pair = worst_separation({n: V[str(i)] for i, n in
+        ((1,'red'),(2,'green'),(3,'yellow'),(4,'blue'),(5,'magenta'),(6,'cyan'))})
+    if sep < SEPARATION_FLOOR: _fail.append(f"{v}:separation {pair[0]}/{pair[1]}")
     print(f"{v:<6} " + " ".join(f"{n} {x:5.2f}" for n,x in checks))
     print(f"       floor {f}  {'PASS' if not bad else 'BELOW: '+str(bad)}   "
-          f"salience {'HOLDS' if ok else 'VIOLATED'}   peak lum {lum(V['15']):.3f}")
+          f"salience {'HOLDS' if ok else 'VIOLATED'}   separation {sep:.4f}   "
+          f"peak lum {lum(V['15']):.3f}")
 
 if _fail:
     raise SystemExit(f"audit failed {_fail} — palette is not shippable")

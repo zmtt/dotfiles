@@ -9,9 +9,9 @@ colours nearly every glyph, so the terminal's chrome weighting would leave
 keywords, types and functions as the most desaturated colours on screen.
 """
 import json, os, plistlib, subprocess
-from editor import syntax
+from editor import syntax, audit
 from perceptual import hex_lr, lch, solve, write_atomic
-from palette import contrast, lum
+from palette import contrast, enforce, lum
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 P = json.load(open(os.path.join(HERE, "palette.json")))
@@ -88,6 +88,9 @@ def build(variant, name):
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
+    # Audit before the first write: a failed gate must not leave one theme
+    # rewritten and its sibling stale.
+    enforce([f"{v}:{k}" for v in P for k, _ in audit(P[v], syntax(P[v]), 4.5)])
     made = []
     for variant, name in (("dark", "Umber"), ("light", "Umber Light")):
         if variant not in P:

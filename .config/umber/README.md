@@ -207,13 +207,17 @@ targets are arguments to `build()` in `build.py`.
 | `USAGE` | `model.py` | Per-hue loudness weight. Lower = more recessive |
 | `HUES` | `model.py` | Hue angle per ANSI slot |
 | `STAGGER` | `model.py` | Per-hue lightness offset, for colour-vision separation |
+| `ROLE_STAGGER` | `editor.py` | Per-role contrast-target multiplier, the same separation for the editor roles |
+| `SEPARATION_FLOOR` | `model.py` | Minimum dichromat-simulated distance any two meaning-carrying colours may sit at |
 | `bg_hex` | `build.py` | Ground for each variant |
 | `targets` | `build.py` | Contrast targets the neutral ramp is solved to |
 
-`optimise-stagger.py` re-solves `STAGGER` if you change the chroma model. It reads
-the same `model.py`, so it can no longer fit a stale copy of it. It
-searches for maximum worst-case separation across deuteranopia, protanopia and
-tritanopia while keeping the lightness spread small.
+`optimise-stagger.py` re-solves `STAGGER` and `ROLE_STAGGER` if you change the
+chroma model. It reads the same `model.py` and `editor.py`, so it can no longer
+fit a stale copy of either. It searches for maximum worst-case separation across
+deuteranopia, protanopia and tritanopia while keeping each spread small, and
+holds a contrast margin above the floors so separation cannot buy its last
+thousandth by parking a colour on a floor.
 
 ## After any change
 
