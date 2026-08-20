@@ -26,6 +26,7 @@ near-neutral literals pass through: they blend with the retinted surfaces
 anyway. The surfaces that matter most are still overridden explicitly below.
 """
 import io, json, os, re, zipfile
+from editor import surfaces
 from perceptual import hex_lr, lch
 from palette import lum
 from model import EMBER, chroma_for
@@ -41,6 +42,10 @@ TEMPLATES = {"dark": "themes/expUI/expUI_dark.theme.json",
 # Which Umber hue each platform ramp becomes, and the chroma that family is
 # allowed at full strength. Orange maps to the ember, the palette's signature.
 NEUTRAL, EMBER_HUE = "neutral", "ember"   # hue sources that are not a palette slot
+
+# Below this chroma a colour reads as neutral: the retint caps unramped colours
+# to it, and the literal pass leaves anything under it alone.
+NEAR_NEUTRAL_C = 0.020
 
 # Which palette slot each platform ramp borrows. Both hue and chroma come from
 # that slot at build time — hardcoding the chroma made this the one surface a
@@ -97,7 +102,7 @@ def retint_ramps(colors, V):
     for name, hx in colors.items():          # anything outside the eight ramps
         if name not in out:
             lr, C, _ = lch(hx)
-            out[name] = hex_lr(lr, min(C, 0.020), nh)[0]
+            out[name] = hex_lr(lr, min(C, NEAR_NEUTRAL_C), nh)[0]
     return out
 
 
@@ -106,12 +111,13 @@ IDENTITY = ("RecentProject.", "CodeWithMe.", "Recap.")
 
 
 def retint_literals(ui, V):
-    """Re-hue opaque chromatic hex literals into the nearest Umber family."""
+    """Re-hue opaque chromatic hex literals into the nearest Umber family,
+    in place."""
     slots = [lch(V[s]) for s in ("1", "2", "3", "4", "5", "6")]
 
     def snap(hx):
         lr, C, H = lch(hx)
-        if C < 0.020:
+        if C < NEAR_NEUTRAL_C:
             return hx                          # near-neutral: blends fine
         _, sc, sh = min(slots, key=lambda s: 180 - abs(abs(s[2] - H) - 180))
         return hex_lr(lr, min(C, sc), sh)[0]
@@ -131,10 +137,7 @@ def build(variant, name):
     V = P[variant]
     theme = read_template("light" if variant == "light" else "dark")
     dark = lum(V["background"]) < 0.18
-    nh = lch(V["foreground"])[2]
-    bglr = lch(V["background"])[0]
-    d = 1 if dark else -1
-    surf = lambda off, C=0.017: hex_lr(bglr + d * off, C, nh)[0]
+    S = surfaces(V)
 
     theme["colors"] = retint_ramps(theme["colors"], V)
     retint_literals(theme.get("ui", {}), V)
@@ -143,14 +146,17 @@ def build(variant, name):
     theme["editorScheme"] = "/themes/%s.xml" % variant
 
     # These must agree exactly with the editor scheme or a seam shows where the
-    # editor meets its own tab, so they are set rather than left to a ramp.
+    # editor meets its own tab, so they come from the same surfaces() ramp the
+    # scheme uses rather than being re-derived here: intellij.py solves the
+    # tree's file-status colours against S["line"] on the promise that this is
+    # the tree's ground.
     theme.setdefault("ui", {}).setdefault("*", {}).update({
-        "background": surf(0.045),
+        "background": S["line"],
         "foreground": V["foreground"],
         "selectionBackground": V["selection"],
         "selectionForeground": V["foreground"],
-        "borderColor": surf(0.075),
-        "separatorColor": surf(0.075),
+        "borderColor": S["panel"],
+        "separatorColor": S["panel"],
     })
     # Merge, never assign: the platform sets more here than we override, and
     # most of it already points at ramp names we retint (tooltip error/success
@@ -161,7 +167,7 @@ def build(variant, name):
     theme["ui"].setdefault("EditorTabs", {}).update({
         "underlinedTabBackground": V["background"],
         "underlineColor": V["cursor"],
-        "background": surf(0.045)})
+        "background": S["line"]})
     return theme
 
 

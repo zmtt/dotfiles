@@ -143,11 +143,17 @@ recolours everything that goes through them: each step keeps its own lightness
 and its position within its ramp, and takes Umber's hue and chroma for that
 family. Orange maps to the ember.
 
-It does not recolour everything. The `ui` block also carries 132 raw hex literals (59 opaque, 73 translucent ARGB) that no ramp name covers — `/Recap/*`, `/RecentProject/*/Avatar/*`,
-`MainWindow.Tab` and friends — and those ship in JetBrains' own cool greys and
-blues. Pure white and black survive too, since scaling zero chroma leaves them
-unchanged. Umber overrides the surfaces that matter (editor, tabs, borders,
-selection); the long tail of rarely-seen panels stays stock.
+The `ui` block also carries 132 raw hex literals (59 opaque, 73 translucent
+ARGB) that no ramp name covers. Opaque chromatic ones are re-hued into the
+nearest Umber accent family by `retint_literals` — the git-log current-branch
+wash, the run widget's green, the progress counter — keeping their own
+lightness and capping chroma at the family's ceiling. The identity palettes
+(`RecentProject.*` avatars, `CodeWithMe.*` users, `Recap.*` branding) are
+excluded: their whole purpose is to differ per project or user. Translucent
+and near-neutral literals pass through, since they blend with the retinted
+surfaces, and pure white and black survive because scaling zero chroma leaves
+them unchanged. Umber still overrides the surfaces that matter (editor, tabs,
+borders, selection) explicitly.
 
 Note that `lch()` returns **Lr**, not Oklab `L`. Passing its result through
 `l_to_lr()` applies the toe correction twice and darkens everything.
@@ -225,12 +231,14 @@ Run `audit.py`. It exits non-zero on any floor or salience violation, so it can
 gate a script. It is the widest check: it alone tests `faint` text, the
 foreground at 0.72 opacity against 0.66 of the floor.
 
-Four emitters gate before writing, each on what it actually emits —
-`build.py` on the terminal slots plus the salience order, `neovim.py` and
-`intellij.py` on every syntax role via `editor.audit`, `xcode.py` on its own
-role set. So a violating palette never reaches those, but passing one of them is
-not the same as passing `audit.py`. `bat-theme.py`, `claude-chrome.py` and
-`jetbrains-ui.py` consume an already-audited palette and do not re-gate.
+Five emitters gate before writing, each on what it actually emits —
+`build.py` on the terminal slots, the salience order and accent separation,
+`neovim.py`, `intellij.py`, `xcode.py` and `bat-theme.py` on every syntax role
+(contrast and dichromat separation) via `editor.audit`, `intellij.py` and
+`xcode.py` additionally on their own surface sets. So a violating palette never
+reaches those, but passing one of them is not the same as passing `audit.py`.
+`claude-chrome.py` and `jetbrains-ui.py` consume an already-audited palette and
+do not re-gate.
 
 `adjust-cell-height = 12%` was verified against both JetBrains Mono and Monaspace
 Neon and is correct for either. Monaspace has a 5.7% shorter natural line height

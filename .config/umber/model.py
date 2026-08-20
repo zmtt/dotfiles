@@ -36,6 +36,14 @@ STAGGER = {"red": -0.044, "green": +0.005, "yellow": +0.009,
 # its hues sit a dE of 0.004 apart for a dichromat.
 SEPARATION_FLOOR = 0.035
 
+# Accent placement per variant: base lightness (pre-toe Oklab L) and chroma
+# scale, plus the readable floor each variant gates against. build.py builds
+# from these and optimise-stagger.py scores candidates against them; a mirrored
+# copy is exactly the stale-fit failure this module exists to prevent.
+ACC_L = {"dark": 0.745, "light": 0.500}
+CSCALE = {"dark": 1.00, "light": 1.05}
+FLOOR = {"dark": 4.5, "light": 4.5}
+
 def chroma_for(hue, scale=1.0):
     warmth = (math.cos(math.radians(hue - EMBER)) + 1) / 2
     return (C_COOL + (C_WARM - C_COOL) * warmth) * USAGE.get(hue, 1.0) * scale

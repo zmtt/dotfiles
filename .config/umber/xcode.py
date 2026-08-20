@@ -40,7 +40,14 @@ def roles(V):
 
     def sys(role):
         L, C, H = lch(X[role])
-        return solve(max(contrast(X[role], bg) * lift, SYS_FLOOR), bg, C, H)
+        target = contrast(X[role], bg) * lift
+        if target < SYS_FLOOR:
+            # The floor eats the lightness step, so recover the user/system
+            # cue on the free axis instead: a duller child at the floor.
+            # Measured: 0.72 lifts the compressed pairs from dE 0.025-0.027
+            # back over the separation floor (0.038-0.039) at no contrast cost.
+            return solve(SYS_FLOOR, bg, C * 0.72, H)
+        return solve(target, bg, C, H)
 
     return {
         "plain": fg,
