@@ -16,11 +16,14 @@ recolours everything routed through a ramp name: each step keeps its own
 lightness and its position within its ramp, and takes Umber's hue and chroma for
 that family.
 
-It is not a total replacement. The ui block also carries raw hex literals that
-no ramp name covers — 59 opaque and 73 translucent ARGB — and those keep
-JetBrains' own colours. Pure white and black pass through unchanged, since
-scaling zero chroma is a no-op. The surfaces that matter are overridden
-explicitly below.
+The ui block also carries raw hex literals that no ramp name covers. Opaque
+chromatic ones (the git-log current-branch wash, the run widget's green, the
+progress counter) are re-hued into the nearest Umber accent family, keeping
+their own lightness and capping chroma at that family's ceiling — except the
+identity palettes (RecentProject avatars, CodeWithMe users, Recap branding),
+whose whole purpose is to differ per project or user. Translucent and
+near-neutral literals pass through: they blend with the retinted surfaces
+anyway. The surfaces that matter most are still overridden explicitly below.
 """
 import io, json, os, re, zipfile
 from perceptual import hex_lr, lch
@@ -98,6 +101,32 @@ def retint_ramps(colors, V):
     return out
 
 
+# Palettes whose whole purpose is to differ per project, user, or product.
+IDENTITY = ("RecentProject.", "CodeWithMe.", "Recap.")
+
+
+def retint_literals(ui, V):
+    """Re-hue opaque chromatic hex literals into the nearest Umber family."""
+    slots = [lch(V[s]) for s in ("1", "2", "3", "4", "5", "6")]
+
+    def snap(hx):
+        lr, C, H = lch(hx)
+        if C < 0.020:
+            return hx                          # near-neutral: blends fine
+        _, sc, sh = min(slots, key=lambda s: 180 - abs(abs(s[2] - H) - 180))
+        return hex_lr(lr, min(C, sc), sh)[0]
+
+    def walk(node, path=""):
+        for k, v in node.items():
+            p = f"{path}.{k}" if path else k
+            if isinstance(v, dict):
+                walk(v, p)
+            elif (isinstance(v, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", v)
+                  and not p.startswith(IDENTITY)):
+                node[k] = snap(v)
+    walk(ui)
+
+
 def build(variant, name):
     V = P[variant]
     theme = read_template("light" if variant == "light" else "dark")
@@ -108,6 +137,7 @@ def build(variant, name):
     surf = lambda off, C=0.017: hex_lr(bglr + d * off, C, nh)[0]
 
     theme["colors"] = retint_ramps(theme["colors"], V)
+    retint_literals(theme.get("ui", {}), V)
     theme["name"] = name
     theme["dark"] = dark
     theme["editorScheme"] = "/themes/%s.xml" % variant
