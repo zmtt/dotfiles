@@ -1,7 +1,8 @@
-from perceptual import hex_lr, l_to_lr, lch, contrast, delta_e, solve_lr, write_atomic
+from perceptual import (hex_lr, l_to_lr, lch, contrast, solve_lr,
+                        worst_separation, write_atomic)
 from palette import lum, enforce
-from model import EMBER, HUES, STAGGER, chroma_for
-import json, os, itertools
+from model import EMBER, HUES, STAGGER, SEPARATION_FLOOR, chroma_for
+import json, os
 import os as _os
 _HERE = _os.path.dirname(_os.path.abspath(__file__))
 
@@ -51,10 +52,8 @@ def report(label, P, notes):
         print(f"  {NAMES[i]:<8} {P[i]} {a:5.2f}:1  C={chroma_for(HUES[NAMES[i]]):.3f}  bright {P[i+8]}")
     print(f"  accents {min(rs):.2f} .. {max(rs):.2f}:1")
     if notes: print("  gamut:", "; ".join(notes))
-    acc = [P[i] for i in range(1,7)]
-    for kind in ["deuteranopia","protanopia","tritanopia"]:
-        w = min(delta_e(acc[a],acc[b],kind) for a,b in itertools.combinations(range(6),2))
-        print(f"  {kind:<13} worst dE {w:.3f}")
+    sep, pair = worst_separation({NAMES[i]: P[i] for i in range(1, 7)})
+    print(f"  separation    worst dE {sep:.4f}  ({pair[0]}/{pair[1]} {pair[2]})")
 
 report("EARTH dark", DARK, dn); report("EARTH light", LIGHT, ln)
 
@@ -75,6 +74,9 @@ for label, P in (("dark", DARK), ("light", LIGHT)):
           (("red", 1), ("yellow", 3), ("cyan", 6), ("blue", 4), ("magenta", 5))}
     if min(ch["red"], ch["yellow"]) <= max(ch["cyan"], ch["blue"], ch["magenta"]):
         bad.append("salience")
+    sep, pair = worst_separation({NAMES[i]: P[i] for i in range(1, 7)})
+    if sep < SEPARATION_FLOOR:
+        bad.append(f"separation {pair[0]}/{pair[1]}")
     print(f"  {label:<6} " + "  ".join(f"{n} {x:5.2f}" for n, x, _ in checks)
           + f"   floor {f}  {'PASS' if not bad else 'BELOW: ' + str(bad)}")
     fail += [f"{label}:{n}" for n in bad]
