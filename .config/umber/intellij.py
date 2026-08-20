@@ -1,6 +1,6 @@
-from perceptual import write_atomic, hex_lr, lch, solve
+from perceptual import write_atomic, hex_lr, lch, solve, worst_separation
 from editor import syntax, surfaces, audit
-from model import EMBER
+from model import EMBER, SEPARATION_FLOOR
 from studio import config_dir
 from palette import contrast, lum, enforce
 import glob, json, os
@@ -22,6 +22,11 @@ ANSI = ("BLACK", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "GRAY",
         "DARKGRAY", "RED_BRIGHT", "GREEN_BRIGHT", "YELLOW_BRIGHT",
         "BLUE_BRIGHT", "MAGENTA_BRIGHT", "CYAN_BRIGHT", "WHITE")
 
+# The readable floor plus a hair, for text solved on the line surface (chips,
+# file names in the tree): 4.5 would sit exactly on the gate.
+LINE_FLOOR = 4.6
+
+
 # Umber-side derivations for surfaces the stock scheme paints in its own cool
 # palette. Everything is solved against the live palette, so both variants
 # derive for free and a model change reaches every one of these.
@@ -36,14 +41,28 @@ def extras(V, S):
     wash = lambda off, C, h: hex_lr(bglr + d * off, C, h)[0]
     # Gutter change bars: chromatic enough to read as colour at two pixels
     # wide, dimmer than text so the gutter never competes with the code.
+    # Documented exception to SEPARATION_FLOOR: the three bars are hue-only for
+    # a dichromat (add/delete 0.013 under deuteranopia). The IDE shape-codes
+    # deletions as a distinct marker, position and width carry the rest, and a
+    # lightness stagger only half-fixes the light ground at this geometry.
     bar = lambda h, t=3.0: solve(t, bg, 0.055, h)
     # File names in the project tree and on tabs render on the UI surface that
     # matches S["line"], so their floor is solved there, not on the editor bg.
-    fs = lambda slot: solve(4.6, S["line"], lch(V[slot])[1], lch(V[slot])[2])
+    # Per-status contrast targets, not one flat one: a flat target erases the
+    # lightness axis and collapsed untracked/conflicted to dE 0.005 for normal
+    # vision. Solved like ROLE_STAGGER (maximise worst dichromat separation,
+    # everyday statuses capped calm, rare-loud states allowed brighter);
+    # worst case 0.0408 both variants, gated below.
+    FS_TARGET = {"1": 4.95, "2": 4.89, "3": 5.56, "5": 4.84,
+                 "6": 6.96, "8": 5.48, "9": 7.16}
+    fs = lambda slot: solve(FS_TARGET[slot], S["line"], lch(V[slot])[1], lch(V[slot])[2])
     return {
         # Chip text (inlays, folded code) on the line surface, and ghost text
         # (inline AI suggestions): readable, deliberately quieter than code.
-        "quiet": solve(4.6, S["line"], 0.014, nh),
+        "quiet": solve(LINE_FLOOR, S["line"], 0.014, nh),
+        # Ignored files recede below the text floor on purpose, the way ghost
+        # text and line numbers do; 4.25 is what the file-status solve chose.
+        "ignored": solve(4.25, S["line"], 0.014, nh),
         "ghost_text": solve(3.6, bg, 0.014, nh),
         # The debugger keeps its platform-wide blue identity, in Umber's blue.
         "exec": wash(0.115, 0.045, hue["blue"]),
@@ -87,7 +106,7 @@ def colors(V, S, E):
         "FILESTATUS_MODIFIED": F["3"], "FILESTATUS_modifiedOutside": F["3"],
         "FILESTATUS_NOT_CHANGED_IMMEDIATE": F["3"], "FILESTATUS_NOT_CHANGED_RECURSIVE": F["3"],
         "FILESTATUS_DELETED": F["8"], "FILESTATUS_IDEA_FILESTATUS_DELETED_FROM_FILE_SYSTEM": F["8"],
-        "FILESTATUS_UNKNOWN": F["1"], "FILESTATUS_IDEA_FILESTATUS_IGNORED": E["quiet"],
+        "FILESTATUS_UNKNOWN": F["1"], "FILESTATUS_IDEA_FILESTATUS_IGNORED": E["ignored"],
         "FILESTATUS_MERGED": F["5"], "FILESTATUS_RENAMED": F["6"],
         "FILESTATUS_IDEA_FILESTATUS_MERGED_WITH_CONFLICTS": F["9"],
         "FILESTATUS_IDEA_FILESTATUS_MERGED_WITH_BOTH_CONFLICTS": F["9"],
@@ -333,10 +352,12 @@ for name, parent, V in VARIANTS:
     built.append((name, parent, V, S, E))
     f = FLOOR[name]; fg, bg = V["foreground"], V["background"]
     checks = [(s, contrast(fg, S[s]), f) for s in ("line", "panel", "over", "add", "change", "delete", "text", "search")]
-    checks += [(s, contrast(fg, E[s]), f) for s in ("exec", "frame", "breakpoint", "step_selection")]
+    checks += [(s, contrast(fg, E[s]), f) for s in ("exec", "frame", "breakpoint", "step_target", "step_selection")]
     checks += [("comment/panel", contrast(V["8"], S["panel"]), f * 0.66),
                ("chip", min(contrast(V[s], bg) for s in ("1", "2", "3", "4", "8", "9")), f),
                ("blame", contrast(V["8"], E["blame"][0]), f * 0.66),
+               ("filestatus", min(contrast(c, S["line"]) for c in E["fs"].values()), f),
+               ("fs-sep", worst_separation({**E["fs"], "ignored": E["ignored"]})[0], SEPARATION_FLOOR),
                ("linenr", contrast(S["linenr"], bg), 1.7)]
     bad = [n for n, x, floor in checks if x < floor]
     bad += [f"syntax:{k}" for k, _ in audit(V, syntax(V), f)]

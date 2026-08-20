@@ -37,14 +37,27 @@ ERROR_C = 0.130
 # the ground differs between variants and a fixed Lr would drift. Solved by
 # optimise-stagger.py against both variants at once. Only the roles that carry
 # a distinct hue appear here; see FAMILY.
+#
+# param was fitted alone, with the other seven held at the values they already
+# had: re-solving all eight together found a nominally better optimum (0.0373)
+# by inverting the salience order — error dimmed below the body roles, member
+# raised above the foreground — which the solver cannot see is wrong. Freezing
+# what already works and solving only what is new is the smaller change and
+# the better one. At 0.922 the binding pair is member/param (deuteranopia,
+# light) at 0.0363.
 ROLE_STAGGER = {"keyword": 1.110, "function": 1.082, "type": 0.827,
                 "string": 0.981, "number": 0.825, "error": 1.169,
-                "member": 0.914}
+                "member": 0.914, "param": 0.922}
 
 # Roles that are deliberately the same hue and lightness as another, differing
 # only in chroma. They are family members rather than competing signals, so they
 # follow their head's offset instead of getting one of their own, and they are
-# excluded from the separation gate because they cannot be pulled apart.
+# excluded from the separation gate because they cannot be pulled apart. On the
+# light ground the distinction is thinner than the chroma numbers suggest:
+# type's requested 0.100 gamut-clips to 0.087 against escape's 0.085, so there
+# the pair is effectively one colour. Accepted: escape paints string escapes
+# and regex metacharacters, which occur inside literals where context already
+# separates them from type names.
 FAMILY = {"constant": "number", "escape": "type"}
 
 

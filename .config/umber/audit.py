@@ -3,13 +3,12 @@ import os as _os
 _HERE = _os.path.dirname(_os.path.abspath(__file__))
 from palette import contrast, lum
 from perceptual import to_linear, linear_to_oklab, worst_separation
-from model import SEPARATION_FLOOR
+from model import FLOOR, SEPARATION_FLOOR
 P = json.load(open(_os.path.join(_HERE, "palette.json")))
 def blend(f,b,a):
     F=[int(f[i:i+2],16) for i in (1,3,5)]; B=[int(b[i:i+2],16) for i in (1,3,5)]
     return '#%02x%02x%02x'%tuple(round(F[k]*a+B[k]*(1-a)) for k in range(3))
 _fail = []
-FLOOR = {"dark":4.5, "light":4.5}
 for v in ("dark","light"):
     V=P[v]; bg=V["background"]; f=FLOOR[v]
     text=[i for i in range(16) if i not in ((0,7,15) if v=="light" else (0,))]
@@ -28,7 +27,7 @@ for v in ("dark","light"):
     if not ok: _fail.append(f"{v}:salience")
     sep, pair = worst_separation({n: V[str(i)] for i, n in
         ((1,'red'),(2,'green'),(3,'yellow'),(4,'blue'),(5,'magenta'),(6,'cyan'))})
-    if sep < SEPARATION_FLOOR: _fail.append(f"{v}:separation {pair[0]}/{pair[1]}")
+    if sep < SEPARATION_FLOOR: _fail.append(f"{v}:separation {pair[0]}/{pair[1]} {pair[2]}")
     print(f"{v:<6} " + " ".join(f"{n} {x:5.2f}" for n,x in checks))
     print(f"       floor {f}  {'PASS' if not bad else 'BELOW: '+str(bad)}   "
           f"salience {'HOLDS' if ok else 'VIOLATED'}   separation {sep:.4f}   "

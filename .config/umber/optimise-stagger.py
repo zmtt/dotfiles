@@ -32,7 +32,7 @@ import os
 import random
 
 from editor import ROLE_STAGGER, FAMILY, syntax, separation
-from model import HUES, STAGGER, chroma_for
+from model import ACC_L, CSCALE, FLOOR, HUES, STAGGER, chroma_for
 from palette import contrast
 from perceptual import hex_lr, l_to_lr, worst_separation
 
@@ -51,14 +51,12 @@ MAX_ROLE_SPREAD = 0.36
 # whole variant rather than a bare lightness.
 PALETTE = json.load(open(os.path.join(HERE, "palette.json")))
 
-# Accent lightness and chroma scale per variant, mirroring build.py's acc_L and
-# cscale. Carrying cscale makes this model exact rather than approximate.
-GROUNDS = {"dark": (l_to_lr(0.745), 1.00),
-           "light": (l_to_lr(0.500), 1.05)}
+# Accent lightness and chroma scale per variant, from the same model.py values
+# build.py builds with, so this model is exact rather than a mirrored copy.
+GROUNDS = {v: (l_to_lr(ACC_L[v]), CSCALE[v]) for v in ACC_L}
 
 # Separation alone will happily buy its last thousandth by pushing an accent
 # down onto its contrast floor, so both solvers hold a margin above it.
-FLOOR = {"dark": 4.5, "light": 4.5}
 ACCENT_MARGIN = 0.30
 
 ROLE_GROUNDS = {v: PALETTE[v] for v in ("dark", "light")}
@@ -73,20 +71,27 @@ def colours(stagger, base_lr, cscale):
             for k in KEYS}
 
 
-def accent_score(stagger):
-    """Worst separation across both variants, or None if a floor fails."""
+def accent_score(stagger, margin=ACCENT_MARGIN):
+    """Worst separation across both variants, or None if a floor fails.
+
+    Candidates are held to the floor plus the margin; the incumbent is scored
+    with margin=0, because the margin is a search constraint, not a shipping
+    gate — judging the shipped values against it made an idle run report
+    "INFEASIBLE" for a palette that passes every real gate, and recommend
+    rewriting it.
+    """
     worst = float("inf")
     for name, (base, cscale) in GROUNDS.items():
         cols = colours(stagger, base, cscale)
         bg = PALETTE[name]["background"]
-        floor = FLOOR[name] + ACCENT_MARGIN
+        floor = FLOOR[name] + margin
         if any(contrast(c, bg) < floor for c in cols.values()):
             return None
         worst = min(worst, worst_separation(cols)[0])
     return worst
 
 
-def role_score(stagger):
+def role_score(stagger, margin=ROLE_MARGIN):
     """As accent_score, for the editor roles.
 
     Infeasible candidates score None rather than a low number so that a box
@@ -100,7 +105,7 @@ def role_score(stagger):
     worst = float("inf")
     for name, V in ROLE_GROUNDS.items():
         S = syntax(V, stagger)
-        floor = FLOOR[name] + ROLE_MARGIN
+        floor = FLOOR[name] + margin
         if any(contrast(S[r], V["background"]) < floor for r in moved):
             return None
         worst = min(worst, separation(S, V["foreground"])[0])
@@ -138,9 +143,9 @@ def maximise(score, keys, centre, spread, samples, current, seed):
     """
     random.seed(seed)
     lo, hi = centre - spread / 2, centre + spread / 2
-    # An infeasible starting point scores -inf rather than None, so the search
-    # still runs and the caller can report the state.
-    cur = score(current)
+    # The incumbent is admitted at its margin-free score: legal-but-inside-the-
+    # margin must still be the value to beat, or the tool recommends churn.
+    cur = score(current, 0)
     scored = [((-math.inf if cur is None else cur), dict(current))]
     for _ in range(samples):
         cand = {k: random.uniform(lo, hi) for k in keys}
@@ -163,7 +168,7 @@ def report(label, keys, current, cur_score, best_score, best, vfmt, unit):
     spread = max(current[k] for k in keys) - min(current[k] for k in keys)
     print(f"\n{label}")
     if cur_score is None:
-        print(f"  current  INFEASIBLE, misses a contrast floor   spread {spread:{sfmt}} {unit}")
+        print(f"  current  ILLEGAL, misses a real contrast floor   spread {spread:{sfmt}} {unit}")
     else:
         print(f"  current  worst separation dE {cur_score:.4f}   spread {spread:{sfmt}} {unit}")
     if best is None:
@@ -177,13 +182,13 @@ def report(label, keys, current, cur_score, best_score, best, vfmt, unit):
 
 
 if __name__ == "__main__":
-    acc_cur = accent_score(STAGGER)
+    acc_cur = accent_score(STAGGER, 0)
     acc_best_score, acc_best = maximise(accent_score, KEYS, 0.0, MAX_SPREAD,
                                         SAMPLES, STAGGER, seed=20260814)
     acc_changed = report("accents (model.STAGGER)", KEYS, STAGGER, acc_cur,
                          acc_best_score, acc_best, "+.3f", "Lr")
 
-    role_cur = role_score(ROLE_STAGGER)
+    role_cur = role_score(ROLE_STAGGER, 0)
     role_best_score, role_best = maximise(role_score, ROLES, 1.0, MAX_ROLE_SPREAD,
                                           SAMPLES // 8, ROLE_STAGGER, seed=20260818)
     role_changed = report("editor roles (editor.ROLE_STAGGER)", ROLES, ROLE_STAGGER,
