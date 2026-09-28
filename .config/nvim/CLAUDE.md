@@ -76,6 +76,9 @@ Removed by usage evidence (fish history, `v:oldfiles`, LSP/DAP logs):
 - sourcekit, ts_ls, yamlls: no Swift/JS/TS files and one YAML file edited here
 - ktlint conform entry: ktlint was never installed, so it never ran
 - `<leader>li`/`<leader>lr` now call `:checkhealth vim.lsp` and `:lsp restart`. On 0.12 lspconfig no longer defines `:LspInfo`/`:LspRestart` once the builtin `:lsp` exists
+- Removed `<leader>rn`, `<leader>ca`, `<leader>cd`: they duplicated the builtins `grn`, `gra`, `<C-w>d`
+- Diagnostics config trimmed to the non-defaults (`severity_sort`, `float.source`); `termguicolors` dropped, Nvim enables it when the terminal supports it
+- `winborder = "rounded"` replaces the diagnostic-only float border, so hover gets one too. Telescope passes `border = "none"` explicitly and lazy.nvim defaults to `"none"`, so neither doubles up
 
 ### 2026-08-14: Umber Colorscheme
 Built a Neovim port of the user's Umber palette (the Ghostty theme). Generator `~/.config/umber/neovim.py` reads `palette.json`, derives editor-only colors in OKLrCH (surface ramp, diff washes, ember search wash), audits contrast floors before writing, and emits `colors/{umber,umber-night,umber-light}.lua` plus matching `lua/lualine/themes/` files. Default colorscheme switched to umber (set in `lua/config/lazy.lua` after lazy setup); solarized-osaka removed; the fallback is the built-in habamax.
