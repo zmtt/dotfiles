@@ -15,27 +15,42 @@ brew "fzf"
 brew "git"
 # Syntax-highlighting pager for git and diff output
 brew "git-delta"
+# Git-compatible distributed version control system
+brew "jj"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
+# Open-source, cross-platform JavaScript runtime environment
+brew "node"
 # Draw UML diagrams
 brew "plantuml"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
+# Display and control your Android device
+brew "scrcpy"
 # Static analysis and lint tool, for (ba)sh scripts
 brew "shellcheck"
 # Cross-shell prompt for astronauts
 brew "starship"
 # Very fast implementation of tldr in Rust
 brew "tealdeer"
+# Parser generator tool
+brew "tree-sitter-cli"
 # Extremely fast Python package installer and resolver, written in Rust
 brew "uv"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
 # All-in-one toolbox for developers
 cask "devutils"
+cask "font-monaspice-nerd-font"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
+# Official Kotlin Language Server
+cask "kotlin-lsp"
 # Control your tools with a few keystrokes
 cask "raycast"
+# JDK from the Eclipse Foundation (Adoptium)
+cask "temurin@17"
+# JDK from the Eclipse Foundation (Adoptium)
+cask "temurin@21"
