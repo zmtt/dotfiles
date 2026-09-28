@@ -64,40 +64,13 @@ return {
             root_markers = { "settings.gradle", "settings.gradle.kts", "workspace.json", ".git" },
         })
 
-        local has_xcrun = vim.fn.executable("xcrun") == 1
-        if has_xcrun then
-            vim.lsp.config("sourcekit", {
-                cmd = { "xcrun", "sourcekit-lsp" },
-                filetypes = { "swift", "objc", "objcpp" },
-            })
-        else
-            local warned_sourcekit = false
-            vim.api.nvim_create_autocmd("FileType", {
-                group = vim.api.nvim_create_augroup("sourcekit-missing-warning", { clear = true }),
-                pattern = { "swift", "objc", "objcpp" },
-                callback = function()
-                    if warned_sourcekit then
-                        return
-                    end
-                    warned_sourcekit = true
-                    vim.notify(
-                        "sourcekit-lsp unavailable: install Xcode Command Line Tools",
-                        vim.log.levels.WARN
-                    )
-                end,
-            })
-        end
-
         vim.lsp.enable({
             "lua_ls",
             "pyright",
             "ruff",
-            "ts_ls",
             "bashls",
             "marksman",
-            "yamlls",
             "kotlin_lsp",
-            has_xcrun and "sourcekit" or nil,
         })
     end,
 }

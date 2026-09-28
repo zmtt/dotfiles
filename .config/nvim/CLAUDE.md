@@ -54,9 +54,6 @@ return {
     └── plugins/          # One spec file per plugin
 ```
 
-Machine-local files excluded from this repo (via the dotfiles repo's
-`info/exclude`): work-specific Java/Android tooling.
-
 ## Plugin Management
 
 - Use `lazy-lock.json` to track exact plugin versions
@@ -71,6 +68,14 @@ This config uses the modern Neovim 0.11+ LSP approach:
 - No `mason-lspconfig.nvim` needed — Mason just installs binaries
 
 ## Session History
+
+### 2026-09-28: Trim to What Is Used
+Removed by usage evidence (fish history, `v:oldfiles`, LSP/DAP logs):
+- nvim-dap, nvim-dap-ui, nvim-nio: the Swift debugger was never started
+- jdtls (plugin, Java ftplugin, Mason package): no Java files edited here
+- sourcekit, ts_ls, yamlls: no Swift/JS/TS files and one YAML file edited here
+- ktlint conform entry: ktlint was never installed, so it never ran
+- `<leader>li`/`<leader>lr` now call `:checkhealth vim.lsp` and `:lsp restart`. On 0.12 lspconfig no longer defines `:LspInfo`/`:LspRestart` once the builtin `:lsp` exists
 
 ### 2026-08-14: Umber Colorscheme
 Built a Neovim port of the user's Umber palette (the Ghostty theme). Generator `~/.config/umber/neovim.py` reads `palette.json`, derives editor-only colors in OKLrCH (surface ramp, diff washes, ember search wash), audits contrast floors before writing, and emits `colors/{umber,umber-night,umber-light}.lua` plus matching `lua/lualine/themes/` files. Default colorscheme switched to umber (set in `lua/config/lazy.lua` after lazy setup); solarized-osaka removed; the fallback is the built-in habamax.
