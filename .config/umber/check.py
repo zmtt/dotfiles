@@ -10,7 +10,8 @@ check fails if one is missing. Adding a script without saying what it is is
 itself an error. Everything else here is derived from that classification.
 
     python3 check.py            fast checks
-    python3 check.py --slow     also runs the sampling optimiser
+    python3 check.py --slow     also runs the sampling optimiser (a no-op
+                                while model.CVD_SAFE is off)
 """
 import glob
 import json
