@@ -17,10 +17,14 @@ The editor set exists because re-levelling chroma per role while solving every
 role to one flat contrast target removed both non-hue axes at once, which is
 the failure model.STAGGER was already there to prevent.
 
-It deliberately does NOT constrain the semantic-over-chrome salience ordering.
-That ordering is not strictly invariant under STAGGER — gamut clipping depends
-on lightness, so realized chroma moves with the offsets — but build.py gates on
-salience directly, which is where that belongs.
+The accent solver deliberately does NOT constrain the semantic-over-chrome
+salience ordering. That ordering is not strictly invariant under STAGGER —
+gamut clipping depends on lightness, so realized chroma moves with the offsets
+— but build.py gates on salience directly, which is where that belongs.
+
+The role solver does constrain salience, because it could not otherwise see
+it: unconstrained, it found its best separation by dimming error below the
+body roles and lifting member toward plain text.
 
 Both solvers do constrain contrast, with a margin above the floor rather than
 the floor itself: separation will otherwise buy its last thousandth by pushing
@@ -31,10 +35,10 @@ import math
 import os
 import random
 
-from editor import ROLE_STAGGER, FAMILY, syntax, separation
-from model import ACC_L, CSCALE, FLOOR, HUES, STAGGER, chroma_for
-from palette import contrast
-from perceptual import hex_lr, l_to_lr, worst_separation
+from editor import ERROR_C, ROLE_STAGGER, FAMILY, syntax, separation
+from model import ACC_L, APCA_FLOOR, CSCALE, FLOOR, HUES, STAGGER, chroma_for
+from palette import apca, contrast
+from perceptual import hex_lr, l_to_lr, lch, worst_separation
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 KEYS = list(HUES)
@@ -66,8 +70,8 @@ ROLE_GROUNDS = {v: PALETTE[v] for v in ("dark", "light")}
 ROLE_MARGIN = 0.30
 
 
-def colours(stagger, base_lr, cscale):
-    return {k: hex_lr(base_lr + stagger[k], chroma_for(HUES[k], cscale), HUES[k])[0]
+def colours(stagger, base_lr, cscale, d):
+    return {k: hex_lr(base_lr + d * stagger[k], chroma_for(HUES[k], cscale), HUES[k])[0]
             for k in KEYS}
 
 
@@ -82,10 +86,12 @@ def accent_score(stagger, margin=ACCENT_MARGIN):
     """
     worst = float("inf")
     for name, (base, cscale) in GROUNDS.items():
-        cols = colours(stagger, base, cscale)
+        cols = colours(stagger, base, cscale, 1 if name == "dark" else -1)
         bg = PALETTE[name]["background"]
         floor = FLOOR[name] + margin
         if any(contrast(c, bg) < floor for c in cols.values()):
+            return None
+        if any(apca(c, bg) < APCA_FLOOR["accent"] for c in cols.values()):
             return None
         worst = min(worst, worst_separation(cols)[0])
     return worst
@@ -105,8 +111,21 @@ def role_score(stagger, margin=ROLE_MARGIN):
     worst = float("inf")
     for name, V in ROLE_GROUNDS.items():
         S = syntax(V, stagger)
+        bg = V["background"]
         floor = FLOOR[name] + margin
-        if any(contrast(S[r], V["background"]) < floor for r in moved):
+        c = {r: contrast(S[r], bg) for r in moved}
+        if any(c[r] < floor for r in moved):
+            return None
+        if any(apca(S[r], bg) < APCA_FLOOR["syntax"] for r in moved):
+            return None
+        # The salience order the separation objective cannot see: an error
+        # out-contrasts every body role and keeps its chroma, and neither
+        # member nor param rises to plain text.
+        if c["error"] < max(c[r] for r in ("keyword", "function", "type", "string", "number")):
+            return None
+        if lch(S["error"])[1] < ERROR_C * 0.9:
+            return None
+        if max(c["member"], c["param"]) >= contrast(V["foreground"], bg):
             return None
         worst = min(worst, separation(S, V["foreground"])[0])
     return worst

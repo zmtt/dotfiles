@@ -252,10 +252,25 @@ untracked files, modified files, errors — and must catch the eye. Magenta and
 blue are mostly chrome: branch names, task labels. Persistent chrome must never
 be the loudest thing on screen.
 
-**Two different metrics, checked separately.** WCAG contrast measures whether
+**Three different metrics, checked separately.** WCAG contrast measures whether
 text can be *read* (floor 4.5:1). Chroma
 measures whether it *catches the eye*. `audit.py` checks both — a change that
 improves one can silently break the other.
+
+APCA is the third, because WCAG 2 overstates contrast near black. At matched
+ratios the dark variant read far weaker than the light one: comments at Lc 34
+against 70, body text at 73 against 92. `APCA_FLOOR` gates body text, accents,
+syntax roles and comments beside the WCAG floor, in `build.py` and
+`editor.audit`. The syntax floor sits at APCA's large-text level, not its
+content level, and cannot rise: red loses its chroma above about Lc 62 on the
+dark ground, errors must stay the most prominent role, and compressing the
+stack under that ceiling drops separation below `SEPARATION_FLOOR`. The shipped
+roles are on that frontier.
+
+**Staggers push toward contrast.** A `STAGGER` offset lightens a slot on the
+dark ground and darkens it on the light one, so each accent keeps the same rank
+in both variants. Applied as a plain Lr offset, it made red the weakest dark
+accent and the strongest light one, and left light cyan at 4.62:1.
 
 ## The knobs
 
@@ -271,6 +286,7 @@ targets are arguments to `build()` in `build.py`.
 | `STAGGER` | `model.py` | Per-hue lightness offset, for colour-vision separation |
 | `ROLE_STAGGER` | `editor.py` | Per-role contrast-target multiplier, the same separation for the editor roles |
 | `SEPARATION_FLOOR` | `model.py` | Minimum dichromat-simulated distance any two meaning-carrying colours may sit at |
+| `APCA_FLOOR` | `model.py` | Perceptual contrast floors (Lc) for body text, accents, syntax roles, comments |
 | `bg_hex` | `build.py` | Ground for each variant |
 | `targets` | `build.py` | Contrast targets the neutral ramp is solved to |
 
@@ -279,7 +295,10 @@ chroma model. It reads the same `model.py` and `editor.py`, so it can no longer
 fit a stale copy of either. It searches for maximum worst-case separation across
 deuteranopia, protanopia and tritanopia while keeping each spread small, and
 holds a contrast margin above the floors so separation cannot buy its last
-thousandth by parking a colour on a floor.
+thousandth by parking a colour on a floor. It also rejects role candidates that
+invert salience: an error below a body role or short of its chroma, or `member`
+or `param` above plain text. Unconstrained, it found its best separation
+exactly that way.
 
 ## After any change
 

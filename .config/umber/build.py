@@ -1,7 +1,7 @@
 from perceptual import (hex_lr, l_to_lr, lch, contrast, solve_lr,
                         worst_separation, write_atomic)
-from palette import lum, enforce
-from model import (ACC_L, CSCALE, EMBER, FLOOR, HUES, STAGGER,
+from palette import apca, lum, enforce
+from model import (ACC_L, APCA_FLOOR, CSCALE, EMBER, FLOOR, HUES, STAGGER,
                    SEPARATION_FLOOR, chroma_for)
 import json, os
 import os as _os
@@ -24,19 +24,22 @@ def build(bg_hex, nh, acc_L, br_L, cscale, br_cscale, targets, sel_L, cur_L):
         P[15] = hex_lr(bg_lr - 0.055, 0.011, nh)[0]
     P["selection"] = hex_lr(l_to_lr(sel_L), 0.030, nh)[0]
     P["cursor"] = hex_lr(l_to_lr(cur_L), chroma_for(EMBER) * 1.15, EMBER)[0]
+    # STAGGER is an offset toward contrast: lighter on the dark ground, darker on
+    # the light one, so a slot keeps its rank in both variants.
+    d = 1 if dark else -1
     notes = []
     for key, idx in (("red",1),("green",2),("yellow",3),("blue",4),("magenta",5),("cyan",6)):
         H = HUES[key]
         for base, off, sc in ((l_to_lr(acc_L), 0, cscale), (l_to_lr(br_L), 8, br_cscale)):
             C = chroma_for(H, sc)
-            hx, clipped, c2 = hex_lr(base + STAGGER[key], C, H)
+            hx, clipped, c2 = hex_lr(base + d * STAGGER[key], C, H)
             P[idx+off] = hx
             if clipped: notes.append(f"{key}{'+' if off else ''} C{C:.3f}->{c2:.3f}")
     return P, notes
 
-DARK, dn = build(nh=60, acc_L=ACC_L["dark"], br_L=0.820,
+DARK, dn = build(nh=60, acc_L=ACC_L["dark"], br_L=0.850,
     cscale=CSCALE["dark"], br_cscale=0.92, sel_L=0.310, cur_L=0.750, bg_hex="#171614",
-    targets={"fg":11.0, "s0":1.55, "s8":4.60, "s7":9.8, "s15":14.0})
+    targets={"fg":12.0, "s0":1.55, "s8":6.1, "s7":9.8, "s15":14.0})
 
 LIGHT, ln = build(nh=66, acc_L=ACC_L["light"], br_L=0.430,
     cscale=CSCALE["light"], br_cscale=1.0, sel_L=0.890, cur_L=0.520, bg_hex="#f8f7f5",
@@ -69,6 +72,10 @@ for label, P in (("dark", DARK), ("light", LIGHT)):
               ("dimmest text", min(contrast(P[i], bg) for i in text), f),
               ("fg on selection", contrast(P["foreground"], sel), f),
               ("cursor on bg", contrast(P["cursor"], bg), f)]
+    checks += [("fg Lc", apca(P["foreground"], bg), APCA_FLOOR["body"]),
+               ("dimmest accent Lc", min(apca(P[i], bg) for i in (*range(1, 7), *range(9, 15))),
+                APCA_FLOOR["accent"]),
+               ("comments Lc", apca(P[8], bg), APCA_FLOOR["comment"])]
     bad = [n for n, x, floor in checks if x < floor]
     ch = {k: lch(P[i])[1] for k, i in
           (("red", 1), ("yellow", 3), ("cyan", 6), ("blue", 4), ("magenta", 5))}
