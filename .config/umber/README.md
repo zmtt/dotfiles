@@ -261,11 +261,15 @@ APCA is the third, because WCAG 2 overstates contrast near black. At matched
 ratios the dark variant read far weaker than the light one: comments at Lc 34
 against 70, body text at 73 against 92. `APCA_FLOOR` gates body text, accents,
 syntax roles and comments beside the WCAG floor, in `build.py` and
-`editor.audit`. Every syntax role clears APCA's content level (Lc 60) on the
-dark ground except strings, the deliberately quieter tier, which is why the
-syntax floor is 50. That only holds with `CVD_SAFE` off. With it on, red losing
-its chroma above about Lc 62 caps the stack, and the staggers then need a
-spread it cannot fit.
+`editor.audit`. The dark variant sits just above those floors, not well
+clear of them: body text at Lc 75.5, the weakest accent at 54.4, syntax roles at
+55 to 57 with strings at 51, comments at 39. Light text on a dark ground blooms,
+so brightness past readability adds glare and no legibility. The slate branch,
+lifted to Lc 80.7 body, read as too bright on screen, though a render at
+specimen size could not show it. This branch carried the same lift (Lc 78.5)
+until it was brought down with it. With `CVD_SAFE` on, the syntax floor of 50 cannot hold: red
+losing its chroma above about Lc 62 caps the stack, and the staggers then need
+a spread it cannot fit.
 
 **Separation is measured for normal vision.** `model.CVD_SAFE` is off, so
 `worst_separation` measures trichromat distance only, and every accent and role
@@ -274,16 +278,15 @@ of calm: types sank below keywords, and the accents never quite sat level. To
 design for colour-blind viewers again, set `CVD_SAFE = True` and re-solve
 `STAGGER` and `ROLE_STAGGER` with `optimise-stagger.py`.
 
-**The grounds stay near-neutral.** `#171614` and `#f8f7f5` sit at chroma 0.004
+**The gro**The grounds stay near-neutral.** `#171614` and `#f8f7f5` sit at chroma 0.004
 and 0.003. A tinted ground was tried both ways and measured by each accent's
 chromatic distance from it. An umber ground (`#1f1915`) muted the warm accents
-that carry errors and changes. A slate one (`#161a21`) made them glow, red and
-yellow 11 to 16% further out, but drained blue by 29%, to the weakest of any
-accent in any variant, and blue paints functions. Only the neutral ground leaves
-every accent where the chroma model put it. Readability and separation came out
-the same on all three, because every colour is solved to a contrast target.
-
-**The cool hues lean earthward**: plum at 325 rather than pink at 340, olive at
+that carry errors and changes. A slate one (`#161a21`) made them glow but drained
+blue by 29%, and blue paints functions. Only the neutral ground leaves every
+accent where the chroma model put it. `perceptual.ground_lift` still runs, so
+the generator matches the slate branch line for line, but on a ground this
+close to grey it adds at most 0.0041 chroma, to yellow. The slate version is tagged
+`umber-slate-dim` in the dotfiles repo.ool hues lean earthward**: plum at 325 rather than pink at 340, olive at
 130, patina at 190, slate at 245.
 
 **Staggers push toward contrast.** A `STAGGER` offset lightens a slot on the
@@ -305,7 +308,7 @@ targets are arguments to `build()` in `build.py`.
 | `STAGGER` | `model.py` | Per-hue lightness offset, for colour-vision separation. Zero while `CVD_SAFE` is off |
 | `CVD_SAFE` | `model.py` | Measure separation for dichromats (True) or normal vision (False) |
 | `ROLE_STAGGER` | `editor.py` | Per-role contrast-target multiplier, the same separation for the editor roles |
-| `SEPARATION_FLOOR` | `model.py` | Minimum dichromat-simulated distance any two meaning-carrying colours may sit at |
+| `SEPARATION_FLOOR` | `model.py` | Minimum distance any two meaning-carrying colours may sit at, for the eyes `CVD_SAFE` names |
 | `APCA_FLOOR` | `model.py` | Perceptual contrast floors (Lc) for body text, accents, syntax roles, comments |
 | `bg_hex` | `build.py` | Ground for each variant |
 | `targets` | `build.py` | Contrast targets the neutral ramp is solved to |

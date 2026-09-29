@@ -28,6 +28,20 @@ def gamut_map_lr(lr, C, H):
         else: hi = mid
     return lo, True
 
+def ground_lift(bg, H):
+    """Chroma a ground takes from a colour of hue H, to add back.
+
+    Chroma is how far a colour sits from grey, but what the eye reads is how far
+    it sits from its ground. A tinted ground already carries some of the hue
+    nearest its own, so an accent there reads flatter by the ground's chroma
+    projected onto it: on a slate ground at C 0.015 the blue lost 29% of its
+    distance. Adding that projection back keeps every colour as far from its
+    ground as the model intends. On a near-neutral ground it is about zero.
+    """
+    _, C, h = lch(bg)
+    return C * max(0.0, math.cos(math.radians(H - h)))
+
+
 def hex_lr(lr, C, H):
     """Specify colour in OKLrCH; return sRGB hex."""
     C2, clipped = gamut_map_lr(lr, C, H)
@@ -133,7 +147,8 @@ VISION_KINDS = tuple(CVD) if CVD_SAFE else (None,)
 
 
 def worst_separation(colours, kinds=VISION_KINDS):
-    """Closest pair among `colours`, across every simulated deficiency.
+    """Closest pair among `colours`, across VISION_KINDS: normal vision, or
+    every simulated deficiency when model.CVD_SAFE is on.
 
     Takes a {name: hex} mapping and returns (dE, (name_a, name_b, kind)).
 
@@ -156,5 +171,5 @@ def worst_separation(colours, kinds=VISION_KINDS):
         for a, b in itertools.combinations(names, 2):
             d = math.dist(lab[(a, kind)], lab[(b, kind)])
             if d < worst:
-                worst, pair = d, (a, b, kind)
+                worst, pair = d, (a, b, kind or "normal vision")
     return worst, pair

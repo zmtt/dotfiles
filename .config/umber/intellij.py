@@ -51,8 +51,9 @@ def extras(V, S):
     # Per-status contrast targets, not one flat one: a flat target erases the
     # lightness axis and collapsed untracked/conflicted to dE 0.005 for normal
     # vision. Solved like ROLE_STAGGER (maximise worst dichromat separation,
-    # everyday statuses capped calm, rare-loud states allowed brighter);
-    # worst case 0.0408 both variants, gated below.
+    # everyday statuses capped calm, rare-loud states allowed brighter), to a
+    # dichromat worst case of 0.0408. The gate below measures for the eyes
+    # model.CVD_SAFE names, so with it off it checks normal vision only.
     FS_TARGET = {"1": 4.95, "2": 4.89, "3": 5.56, "5": 4.84,
                  "6": 6.96, "8": 5.48, "9": 7.16}
     fs = lambda slot: solve(FS_TARGET[slot], S["line"], lch(V[slot])[1], lch(V[slot])[2])
