@@ -85,29 +85,26 @@ def syntax(V, stagger=None):
         "escape":   (body, hue["cyan"], SYNTAX_C * 0.85),
         # A step above the body roles: errors interrupt. salience() holds it.
         "error":    (body * 1.03, hue["red"], ERROR_C),
-        # Instance variables and properties. Green, on the content side of the
-        # taxonomy the editor accents use: warm is content (strings green,
-        # literals yellow, errors red), cool is structure (keywords magenta,
-        # functions blue, types cyan). The old whisper cyan at C 0.045 measured
-        # 0.032 from param and 0.035 from keyword under simulated deficiency on
-        # the dark ground — at or under the floor — because cyan is boxed in
-        # between function, keyword and the plain foreground. Full chroma
-        # because it is a real role carrying real tokens (ivars, properties,
-        # instance fields), not a whisper, and it is separated from string —
-        # the other green — by the lightness step the stagger provides.
-        "member":   (9.2 if dark else 8.0, hue["green"], SYNTAX_C),
+        # Instance variables and properties: a steel whisper just under plain
+        # text. At full-chroma green it shared string's hue and chroma, apart
+        # only by the lightness step the stagger once provided, which is gone
+        # while CVD_SAFE is off. On the foreground's hue it failed separation
+        # from param on the warm light ground (0.023), which sits beside
+        # param's hue.
+        "member":   (9.2 if dark else 8.0, hue["blue"], 0.045),
         "param":    (9.6 if dark else 8.6, hue["yellow"], 0.030),
         # Punctuation separates identifiers; it should not compete with them.
         # Below every hued role, above the comments; audit() holds the order,
         # because ROLE_STAGGER moves the roles and once pushed type and number
         # under a fixed punct target.
-        "punct":    (5.8 if dark else 4.95, fg_h, 0.012),
-        "muted":    (5.5 if dark else 4.8, fg_h, 0.014),
+        "punct":    (6.5 if dark else 4.95, fg_h, 0.012),
+        "muted":    (6.2 if dark else 4.8, fg_h, 0.014),
     }
     # punct and muted are near-neutrals on the foreground's hue, which sits next
-    # to a tinted ground's own, so a lift would tint them past plain text.
+    # to a tinted ground's own, so a lift would tint them past plain text. member
+    # is a whisper too, and a lift on slate would push it toward function.
     return {role: solve(target * st.get(FAMILY.get(role, role), 1.0), bg,
-                        C + (0.0 if role in ("punct", "muted") else ground_lift(bg, h)), h)
+                        C + (0.0 if role in ("punct", "muted", "member") else ground_lift(bg, h)), h)
             for role, (target, h, C) in spec.items()}
 
 

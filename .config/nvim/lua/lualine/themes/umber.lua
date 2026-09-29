@@ -3,36 +3,36 @@ return {
   normal = {
     a = { fg = "#161a21", bg = "#f98e53", gui = "bold" },
     b = { fg = "#c6d1dc", bg = "#2e363f" },
-    c = { fg = "#838e98", bg = "#1e262d" },
+    c = { fg = "#8d98a2", bg = "#1e262d" },
   },
   insert = {
     a = { fg = "#161a21", bg = "#99b979", gui = "bold" },
     b = { fg = "#c6d1dc", bg = "#2e363f" },
-    c = { fg = "#838e98", bg = "#1e262d" },
+    c = { fg = "#8d98a2", bg = "#1e262d" },
   },
   visual = {
     a = { fg = "#161a21", bg = "#c49dc6", gui = "bold" },
     b = { fg = "#c6d1dc", bg = "#2e363f" },
-    c = { fg = "#838e98", bg = "#1e262d" },
+    c = { fg = "#8d98a2", bg = "#1e262d" },
   },
   replace = {
     a = { fg = "#161a21", bg = "#f28c76", gui = "bold" },
     b = { fg = "#c6d1dc", bg = "#2e363f" },
-    c = { fg = "#838e98", bg = "#1e262d" },
+    c = { fg = "#8d98a2", bg = "#1e262d" },
   },
   command = {
     a = { fg = "#161a21", bg = "#de9e47", gui = "bold" },
     b = { fg = "#c6d1dc", bg = "#2e363f" },
-    c = { fg = "#838e98", bg = "#1e262d" },
+    c = { fg = "#8d98a2", bg = "#1e262d" },
   },
   terminal = {
-    a = { fg = "#161a21", bg = "#78bbb6", gui = "bold" },
+    a = { fg = "#161a21", bg = "#79bbb2", gui = "bold" },
     b = { fg = "#c6d1dc", bg = "#2e363f" },
-    c = { fg = "#838e98", bg = "#1e262d" },
+    c = { fg = "#8d98a2", bg = "#1e262d" },
   },
   inactive = {
-    a = { fg = "#838e98", bg = "#1e262d" },
-    b = { fg = "#838e98", bg = "#1e262d" },
-    c = { fg = "#838e98", bg = "#1e262d" },
+    a = { fg = "#8d98a2", bg = "#1e262d" },
+    b = { fg = "#8d98a2", bg = "#1e262d" },
+    c = { fg = "#8d98a2", bg = "#1e262d" },
   },
 }
