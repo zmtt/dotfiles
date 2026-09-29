@@ -2,8 +2,8 @@
   "name": "Umber",
   "base": "dark",
   "overrides": {
-    "userMessageBackground": "#342c26",
-    "userMessageBackgroundHover": "#493f37",
+    "userMessageBackground": "#282f36",
+    "userMessageBackgroundHover": "#39424b",
     "inverseText": "#e1e7ec",
     "briefLabelYou": "#f98e53"
   }

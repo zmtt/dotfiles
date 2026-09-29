@@ -29,8 +29,8 @@ HUES = {"red": 33.0, "green": 130.0, "yellow": 72.0,
 STAGGER = {"red": 0.0, "green": 0.0, "yellow": 0.0,
            "blue": 0.0, "magenta": 0.0, "cyan": 0.0}
 
-# No two colours that carry distinct meaning may be closer than this for any
-# dichromat, measured by perceptual.worst_separation. It is a collapse detector,
+# No two colours that carry distinct meaning may be closer than this, measured
+# by perceptual.worst_separation for the eyes CVD_SAFE names. It is a collapse detector,
 # not an optimality target: the floor sits below what the staggers reach, so
 # ordinary retuning does not trip it. The case it exists to catch is a set of
 # roles at one flat lightness, which passes every contrast check while two of

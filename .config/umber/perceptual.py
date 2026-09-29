@@ -147,7 +147,8 @@ VISION_KINDS = tuple(CVD) if CVD_SAFE else (None,)
 
 
 def worst_separation(colours, kinds=VISION_KINDS):
-    """Closest pair among `colours`, across every simulated deficiency.
+    """Closest pair among `colours`, across VISION_KINDS: normal vision, or
+    every simulated deficiency when model.CVD_SAFE is on.
 
     Takes a {name: hex} mapping and returns (dE, (name_a, name_b, kind)).
 
@@ -170,5 +171,5 @@ def worst_separation(colours, kinds=VISION_KINDS):
         for a, b in itertools.combinations(names, 2):
             d = math.dist(lab[(a, kind)], lab[(b, kind)])
             if d < worst:
-                worst, pair = d, (a, b, kind)
+                worst, pair = d, (a, b, kind or "normal vision")
     return worst, pair

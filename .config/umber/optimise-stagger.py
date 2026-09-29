@@ -9,8 +9,8 @@ looking uneven.
   editor.ROLE_STAGGER  the editor roles, multipliers on each contrast target
 
 Both maximise the same thing: the smallest perceptual distance between any two
-colours, across deuteranopia, protanopia and tritanopia, on both variants at
-once. That measurement is perceptual.worst_separation, shared with the gates in
+colours, across deuteranopia, protanopia and tritanopia when model.CVD_SAFE is
+on (normal vision only when it is off), on both variants at once. That measurement is perceptual.worst_separation, shared with the gates in
 build.py, audit.py and editor.audit so the solver and the gate cannot disagree.
 
 The editor set exists because re-levelling chroma per role while solving every
@@ -35,10 +35,10 @@ import math
 import os
 import random
 
-from editor import ERROR_C, ROLE_STAGGER, FAMILY, syntax, separation
+from editor import ROLE_STAGGER, FAMILY, salience, syntax, separation
 from model import ACC_L, APCA_FLOOR, CSCALE, FLOOR, HUES, STAGGER, chroma_for
 from palette import apca, contrast
-from perceptual import hex_lr, l_to_lr, lch, worst_separation
+from perceptual import ground_lift, hex_lr, l_to_lr, worst_separation
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 KEYS = list(HUES)
@@ -70,8 +70,9 @@ ROLE_GROUNDS = {v: PALETTE[v] for v in ("dark", "light")}
 ROLE_MARGIN = 0.30
 
 
-def colours(stagger, base_lr, cscale, d):
-    return {k: hex_lr(base_lr + d * stagger[k], chroma_for(HUES[k], cscale), HUES[k])[0]
+def colours(stagger, base_lr, cscale, d, bg):
+    return {k: hex_lr(base_lr + d * stagger[k],
+                      chroma_for(HUES[k], cscale) + ground_lift(bg, HUES[k]), HUES[k])[0]
             for k in KEYS}
 
 
@@ -86,8 +87,8 @@ def accent_score(stagger, margin=ACCENT_MARGIN):
     """
     worst = float("inf")
     for name, (base, cscale) in GROUNDS.items():
-        cols = colours(stagger, base, cscale, 1 if name == "dark" else -1)
         bg = PALETTE[name]["background"]
+        cols = colours(stagger, base, cscale, 1 if name == "dark" else -1, bg)
         floor = FLOOR[name] + margin
         if any(contrast(c, bg) < floor for c in cols.values()):
             return None
@@ -118,14 +119,7 @@ def role_score(stagger, margin=ROLE_MARGIN):
             return None
         if any(apca(S[r], bg) < APCA_FLOOR["syntax"] for r in moved):
             return None
-        # The salience order the separation objective cannot see: an error
-        # out-contrasts every body role and keeps its chroma, and neither
-        # member nor param rises to plain text.
-        if c["error"] < max(c[r] for r in ("keyword", "function", "type", "string", "number")):
-            return None
-        if lch(S["error"])[1] < ERROR_C * 0.9:
-            return None
-        if max(c["member"], c["param"]) >= contrast(V["foreground"], bg):
+        if salience(S, V):
             return None
         worst = min(worst, separation(S, V["foreground"])[0])
     return worst

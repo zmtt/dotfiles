@@ -115,8 +115,9 @@ def collisions():
 
 def gutter(variant):
     """Separation of the red/green line numbers, the channel a dichromat reads
-    the diff by once the washes have collapsed. Shaped like audit()'s findings
-    so the two collect together."""
+    the diff by once the washes have collapsed. Measured for the eyes
+    model.CVD_SAFE names, so with it off this checks normal vision only.
+    Shaped like audit()'s findings so the two collect together."""
     dE, _ = worst_separation({"minus": P[variant]["1"], "plus": P[variant]["2"]})
     return (f"{variant}:gutter", dE, SEPARATION_FLOOR)
 
