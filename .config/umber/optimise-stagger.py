@@ -36,7 +36,7 @@ import os
 import random
 
 from editor import ROLE_STAGGER, FAMILY, salience, syntax, separation
-from model import ACC_L, APCA_FLOOR, CSCALE, FLOOR, HUES, STAGGER, chroma_for
+from model import ACC_L, APCA_FLOOR, CSCALE, CVD_SAFE, FLOOR, HUES, STAGGER, chroma_for
 from palette import apca, contrast
 from perceptual import ground_lift, hex_lr, l_to_lr, worst_separation
 
@@ -195,6 +195,11 @@ def report(label, keys, current, cur_score, best_score, best, vfmt, unit):
 
 
 if __name__ == "__main__":
+    if not CVD_SAFE:
+        print("model.CVD_SAFE is off: separation is measured for normal vision and the\n"
+              "staggers stay zero, so there is nothing to solve. Set CVD_SAFE = True to\n"
+              "design for dichromats, then rerun.")
+        raise SystemExit(0)
     acc_cur = accent_score(STAGGER, 0)
     acc_best_score, acc_best = maximise(accent_score, KEYS, 0.0, MAX_SPREAD,
                                         SAMPLES, STAGGER, seed=20260814)
