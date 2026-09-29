@@ -29,8 +29,8 @@ HUES = {"red": 33.0, "green": 130.0, "yellow": 72.0,
 STAGGER = {"red": 0.0, "green": 0.0, "yellow": 0.0,
            "blue": 0.0, "magenta": 0.0, "cyan": 0.0}
 
-# No two colours that carry distinct meaning may be closer than this for any
-# dichromat, measured by perceptual.worst_separation. It is a collapse detector,
+# No two colours that carry distinct meaning may be closer than this, measured
+# by perceptual.worst_separation for the eyes CVD_SAFE names. It is a collapse detector,
 # not an optimality target: the floor sits below what the staggers reach, so
 # ordinary retuning does not trip it. The case it exists to catch is a set of
 # roles at one flat lightness, which passes every contrast check while two of
@@ -48,18 +48,19 @@ CVD_SAFE = False
 # scale, plus the readable floor each variant gates against. build.py builds
 # from these and optimise-stagger.py scores candidates against them; a mirrored
 # copy is exactly the stale-fit failure this module exists to prevent.
-ACC_L = {"dark": 0.785, "light": 0.500}
+ACC_L = {"dark": 0.745, "light": 0.500}
 CSCALE = {"dark": 1.00, "light": 1.05}
 FLOOR = {"dark": 4.5, "light": 4.5}
 
 # APCA |Lc| floors, gated beside FLOOR because WCAG 2 overstates contrast near
 # black: at matched ratios the dark variant read far weaker than the light one
 # (comments Lc 34 against 70). APCA's own guidance is Lc 75 for body text, 60
-# for content, 45 for large text and 30 for spot-readable. syntax sits under
-# 60 for the strings, which are the deliberately quieter tier; the other roles
-# clear 60. With CVD_SAFE on it cannot hold 50: red loses its chroma above
-# about Lc 62 on the dark ground, errors must stay on top, and the staggers
-# then need a spread that stack cannot fit.
+# for content, 45 for large text and 30 for spot-readable. The dark variant
+# is held just above these rather than well clear of them: light text on a dark
+# ground blooms, and brightness past readability buys glare, not legibility.
+# With CVD_SAFE on, syntax cannot hold 50: red loses its chroma above about
+# Lc 62 on the dark ground, errors must stay on top, and the staggers then need
+# a spread that stack cannot fit.
 APCA_FLOOR = {"body": 75, "accent": 52, "syntax": 50, "comment": 38}
 
 def chroma_for(hue, scale=1.0):

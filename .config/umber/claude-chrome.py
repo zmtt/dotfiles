@@ -1,4 +1,5 @@
-from perceptual import hex_lr, l_to_lr, contrast, solve, write_atomic
+from perceptual import hex_lr, l_to_lr, lch, contrast, solve, write_atomic
+from model import EMBER
 import json, os
 import os as _os
 _HERE = _os.path.dirname(_os.path.abspath(__file__))
@@ -6,15 +7,17 @@ _HERE = _os.path.dirname(_os.path.abspath(__file__))
 P = json.load(open(_os.path.join(_HERE, "palette.json")))
 D, L = P["dark"], P["light"]
 
-# The ground is near-neutral now, so the message box carries only a trace of
-# warmth — enough to read as a panel rather than a patch of a different theme.
-dark_box   = hex_lr(l_to_lr(0.300), 0.016, 58)[0]
-dark_hover = hex_lr(l_to_lr(0.375), 0.019, 58)[0]
-light_box   = hex_lr(l_to_lr(0.930), 0.014, 72)[0]
-light_hover = hex_lr(l_to_lr(0.968), 0.010, 72)[0]
+# The message box takes the palette's neutral hue, the one every other
+# emitter reads off the foreground, so it is a panel of the same material as
+# the ground. Hard-coded warm hues left a brown box on the slate ground.
+dnh, lnh = lch(D["foreground"])[2], lch(L["foreground"])[2]
+dark_box   = hex_lr(l_to_lr(0.300), 0.016, dnh)[0]
+dark_hover = hex_lr(l_to_lr(0.375), 0.019, dnh)[0]
+light_box   = hex_lr(l_to_lr(0.930), 0.014, lnh)[0]
+light_hover = hex_lr(l_to_lr(0.968), 0.010, lnh)[0]
 
 dark_label  = D["cursor"]
-light_label = solve(5.0, light_box, 0.135, 48)
+light_label = solve(5.0, light_box, 0.135, EMBER)
 
 for name, box, hover, V, inv, lbl in (
     ("dark",  dark_box,  dark_hover,  D, D["15"], dark_label),

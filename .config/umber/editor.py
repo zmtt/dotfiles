@@ -23,7 +23,7 @@ equivalent reintroduced it exactly: the high-frequency roles shipped at a
 worst-case separation of 0.004 (light, tritanopia, function against type) while
 the terminal accents alongside them held 0.035 or better.
 """
-from perceptual import hex_lr, lch, solve, worst_separation
+from perceptual import ground_lift, hex_lr, lch, solve, worst_separation
 from palette import apca, contrast, lum
 from model import APCA_FLOOR, EMBER, SEPARATION_FLOOR
 
@@ -47,9 +47,8 @@ ROLE_STAGGER = {"keyword": 1.0, "function": 1.0, "type": 1.0,
 # only in chroma. They are family members rather than competing signals, so they
 # follow their head's offset instead of getting one of their own, and they are
 # excluded from the separation gate because they cannot be pulled apart. On the
-# light ground the distinction is thinner than the chroma numbers suggest:
-# type's requested 0.100 gamut-clips to 0.087 against escape's 0.085, so there
-# the pair is effectively one colour. Accepted: escape paints string escapes
+# light ground they are one colour: at the flat stagger both gamut-clip to
+# about C 0.080 and resolve to the same hex. Accepted: escape paints string escapes
 # and regex metacharacters, which occur inside literals where context already
 # separates them from type names.
 FAMILY = {"constant": "number", "escape": "type"}
@@ -70,8 +69,8 @@ def syntax(V, stagger=None):
 
     # Contrast targets, not lightness targets: the ground differs between
     # variants, and a fixed Lr would drift.
-    body = 8.4 if dark else 6.2
-    quiet = 7.2 if dark else 5.2
+    body = 7.8 if dark else 6.2
+    quiet = 7.1 if dark else 5.2
     fg_h = lch(V["foreground"])[2]
 
     # role -> (contrast target, hue, chroma). One table so the stagger applies
@@ -84,7 +83,8 @@ def syntax(V, stagger=None):
         "number":   (body, hue["yellow"], SYNTAX_C),
         "constant": (body, hue["yellow"], SYNTAX_C * 1.15),
         "escape":   (body, hue["cyan"], SYNTAX_C * 0.85),
-        "error":    (body, hue["red"], ERROR_C),
+        # A step above the body roles: errors interrupt. salience() holds it.
+        "error":    (body * 1.03, hue["red"], ERROR_C),
         # Instance variables and properties. Green, on the content side of the
         # taxonomy the editor accents use: warm is content (strings green,
         # literals yellow, errors red), cool is structure (keywords magenta,
@@ -104,8 +104,31 @@ def syntax(V, stagger=None):
         "punct":    (5.8 if dark else 4.95, fg_h, 0.012),
         "muted":    (5.5 if dark else 4.8, fg_h, 0.014),
     }
-    return {role: solve(target * st.get(FAMILY.get(role, role), 1.0), bg, C, h)
+    # punct and muted are near-neutrals on the foreground's hue, which sits next
+    # to a tinted ground's own, so a lift would tint them past plain text.
+    return {role: solve(target * st.get(FAMILY.get(role, role), 1.0), bg,
+                        C + (0.0 if role in ("punct", "muted") else ground_lift(bg, h)), h)
             for role, (target, h, C) in spec.items()}
+
+
+def salience(S, V):
+    """The ordering separation cannot see, as a list of violations.
+
+    An error out-contrasts every body role and keeps its chroma, and neither
+    member nor param rises to plain text. audit() gates on it and the role
+    solver rejects candidates by it, from this one definition, because the two
+    used to carry separate copies and disagreed about the shipped values.
+    """
+    bg = V["background"]
+    c = {r: contrast(S[r], bg) for r in S}
+    bad = []
+    if c["error"] < max(c[r] for r in ("keyword", "function", "type", "string", "number")):
+        bad.append(("error below a body role", round(c["error"], 2)))
+    if lch(S["error"])[1] < ERROR_C * 0.9:
+        bad.append(("error chroma", round(lch(S["error"])[1], 3)))
+    if max(c["member"], c["param"]) >= contrast(V["foreground"], bg):
+        bad.append(("member/param above plain text", round(max(c["member"], c["param"]), 2)))
+    return bad
 
 
 def separation(S, foreground=None):
@@ -135,13 +158,18 @@ def audit(V, S, floor=4.5):
     bg = V["background"]
     bad = [(k, round(contrast(v, bg), 2)) for k, v in S.items()
            if contrast(v, bg) < floor]
-    bad += [(f"{k} Lc", round(apca(S[k], bg), 1)) for k in ROLE_STAGGER
+    bad += [(f"{k} Lc", round(apca(S[k], bg), 1)) for k in (*ROLE_STAGGER, *FAMILY)
             if apca(S[k], bg) < APCA_FLOOR["syntax"]]
     if apca(S["muted"], bg) < APCA_FLOOR["comment"]:
         bad.append(("muted Lc", round(apca(S["muted"], bg), 1)))
     c = {k: contrast(v, bg) for k, v in S.items()}
     if not c["muted"] < c["punct"] < min(c[k] for k in ROLE_STAGGER):
         bad.append(("order muted < punct < roles", round(c["punct"], 2)))
+    # Neovim and Android Studio paint comments with slot 8, not muted, so it
+    # has to sit under punctuation too.
+    if contrast(V["8"], bg) >= c["punct"]:
+        bad.append(("comments (slot 8) above punct", round(contrast(V["8"], bg), 2)))
+    bad += salience(S, V)
     dE, pair = separation(S, V["foreground"])
     if dE < SEPARATION_FLOOR:
         bad.append((f"separation {pair[0]}/{pair[1]} {pair[2]}", round(dE, 4)))

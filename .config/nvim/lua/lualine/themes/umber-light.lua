@@ -6,7 +6,7 @@ return {
     c = { fg = "#786e64", bg = "#f2e9df" },
   },
   insert = {
-    a = { fg = "#f8f7f5", bg = "#506e2e", gui = "bold" },
+    a = { fg = "#f8f7f5", bg = "#506e2c", gui = "bold" },
     b = { fg = "#40372e", bg = "#e0d5ca" },
     c = { fg = "#786e64", bg = "#f2e9df" },
   },
@@ -16,7 +16,7 @@ return {
     c = { fg = "#786e64", bg = "#f2e9df" },
   },
   replace = {
-    a = { fg = "#f8f7f5", bg = "#a23f2c", gui = "bold" },
+    a = { fg = "#f8f7f5", bg = "#a33e2b", gui = "bold" },
     b = { fg = "#40372e", bg = "#e0d5ca" },
     c = { fg = "#786e64", bg = "#f2e9df" },
   },
