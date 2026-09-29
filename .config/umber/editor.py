@@ -23,7 +23,7 @@ equivalent reintroduced it exactly: the high-frequency roles shipped at a
 worst-case separation of 0.004 (light, tritanopia, function against type) while
 the terminal accents alongside them held 0.035 or better.
 """
-from perceptual import hex_lr, lch, solve, worst_separation
+from perceptual import ground_lift, hex_lr, lch, solve, worst_separation
 from palette import apca, contrast, lum
 from model import APCA_FLOOR, EMBER, SEPARATION_FLOOR
 
@@ -104,7 +104,8 @@ def syntax(V, stagger=None):
         "punct":    (5.8 if dark else 4.95, fg_h, 0.012),
         "muted":    (5.5 if dark else 4.8, fg_h, 0.014),
     }
-    return {role: solve(target * st.get(FAMILY.get(role, role), 1.0), bg, C, h)
+    return {role: solve(target * st.get(FAMILY.get(role, role), 1.0), bg,
+                        C + ground_lift(bg, h), h)
             for role, (target, h, C) in spec.items()}
 
 

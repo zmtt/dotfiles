@@ -1,4 +1,4 @@
-from perceptual import (hex_lr, l_to_lr, lch, contrast, solve_lr,
+from perceptual import (ground_lift, hex_lr, l_to_lr, lch, contrast, solve_lr,
                         worst_separation, write_atomic)
 from palette import apca, lum, enforce
 from model import (ACC_L, APCA_FLOOR, CSCALE, EMBER, FLOOR, HUES, STAGGER,
@@ -31,18 +31,18 @@ def build(bg_hex, nh, acc_L, br_L, cscale, br_cscale, targets, sel_L, cur_L):
     for key, idx in (("red",1),("green",2),("yellow",3),("blue",4),("magenta",5),("cyan",6)):
         H = HUES[key]
         for base, off, sc in ((l_to_lr(acc_L), 0, cscale), (l_to_lr(br_L), 8, br_cscale)):
-            C = chroma_for(H, sc)
+            C = chroma_for(H, sc) + ground_lift(bg, H)
             hx, clipped, c2 = hex_lr(base + d * STAGGER[key], C, H)
             P[idx+off] = hx
             if clipped: notes.append(f"{key}{'+' if off else ''} C{C:.3f}->{c2:.3f}")
     return P, notes
 
-DARK, dn = build(nh=60, acc_L=ACC_L["dark"], br_L=0.835,
-    cscale=CSCALE["dark"], br_cscale=0.92, sel_L=0.310, cur_L=0.750, bg_hex="#171614",
+DARK, dn = build(nh=250, acc_L=ACC_L["dark"], br_L=0.835,
+    cscale=CSCALE["dark"], br_cscale=0.92, sel_L=0.310, cur_L=0.750, bg_hex="#161a21",
     targets={"fg":12.0, "s0":1.55, "s8":6.1, "s7":9.8, "s15":14.0})
 
-LIGHT, ln = build(nh=66, acc_L=ACC_L["light"], br_L=0.430,
-    cscale=CSCALE["light"], br_cscale=1.0, sel_L=0.890, cur_L=0.520, bg_hex="#f8f7f5",
+LIGHT, ln = build(nh=250, acc_L=ACC_L["light"], br_L=0.430,
+    cscale=CSCALE["light"], br_cscale=1.0, sel_L=0.890, cur_L=0.520, bg_hex="#f3f6fa",
     targets={"fg":10.9, "s0":13.0, "s8":4.65, "s7":1.70, "s15":1.12})
 
 NAMES = {1:"red",2:"green",3:"yellow",4:"blue",5:"magenta",6:"cyan"}

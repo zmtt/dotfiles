@@ -274,14 +274,18 @@ of calm: types sank below keywords, and the accents never quite sat level. To
 design for colour-blind viewers again, set `CVD_SAFE = True` and re-solve
 `STAGGER` and `ROLE_STAGGER` with `optimise-stagger.py`.
 
-**The grounds stay near-neutral.** `#171614` and `#f8f7f5` sit at chroma 0.004
-and 0.003. A tinted ground was tried both ways and measured by each accent's
-chromatic distance from it. An umber ground (`#1f1915`) muted the warm accents
-that carry errors and changes. A slate one (`#161a21`) made them glow, red and
-yellow 11 to 16% further out, but drained blue by 29%, to the weakest of any
-accent in any variant, and blue paints functions. Only the neutral ground leaves
-every accent where the chroma model put it. Readability and separation came out
-the same on all three, because every colour is solved to a contrast target.
+**The grounds are slate, and chroma is measured against them.** `#161a21` and
+`#f3f6fa` sit at chroma 0.015 and 0.006, cool against warm accents, which is the
+pairing that makes the ember and ochre glow: red and yellow sit 10 to 16%
+further from the ground than on a neutral one. A tinted ground also takes
+chroma from the accents nearest its own hue, and uncompensated slate drained
+blue by 29%. `perceptual.ground_lift` adds the ground's projected chroma back
+to every accent and syntax role, so the cool ones stay within 8% of where a
+neutral ground puts them. The neutral hue `nh` follows the ground to 250, so
+greys, selection and editor surfaces are one temperature with it. Kept warm,
+they put a brown title bar on a slate window. An umber ground (`#1f1915`) was
+tried first and muted the warm accents instead. The neutral-ground version is
+tagged `umber-neutral` in the dotfiles repo.
 
 **The cool hues lean earthward**: plum at 325 rather than pink at 340, olive at
 130, patina at 190, slate at 245.
