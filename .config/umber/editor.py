@@ -148,7 +148,16 @@ def audit(V, S, floor=4.5):
 def surfaces(V):
     """The near-background ramp every editor needs: current line, panels, diff
     washes, search. Derived here rather than per emitter, so a wash tuned once
-    cannot drift between Neovim, Android Studio and Xcode."""
+    cannot drift between Neovim, Android Studio and Xcode.
+
+    add, delete and change carry nothing for a dichromat and cannot be made to.
+    At the chroma a wash has to live at, 0.028 to 0.030, the red/green pair
+    measures a deuteranopic separation of 0.008 dark and 0.011 light against
+    SEPARATION_FLOOR's 0.035, and rotating the hues far enough to clear that
+    fails tritanopia instead. Every consumer therefore owes these three a second
+    channel that is not colour: red/green line numbers in delta, gitsigns in
+    Neovim's sign column. Only the surfaces are safe to use unaccompanied.
+    """
     bg = V["background"]
     dark = lum(bg) < 0.18
     bglr, nh = lch(bg)[0], lch(V["foreground"])[2]
