@@ -31,8 +31,9 @@ STAGGER = {"red": 0.0, "green": 0.0, "yellow": 0.0,
 
 # No two colours that carry distinct meaning may be closer than this, measured
 # by perceptual.worst_separation for the eyes CVD_SAFE names. It is a collapse detector,
-# not an optimality target: the floor sits below what the staggers reach, so
-# ordinary retuning does not trip it. The case it exists to catch is a set of
+# not an optimality target: the floor sits below what the palette reaches (by
+# hue alone for normal vision, by the staggers for dichromats), so ordinary
+# retuning does not trip it. The case it exists to catch is a set of
 # roles at one flat lightness, which passes every contrast check while two of
 # its hues sit a dE of 0.004 apart for a dichromat.
 SEPARATION_FLOOR = 0.035
