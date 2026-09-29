@@ -20,7 +20,9 @@ theme file — the next rebuild overwrites it.
 | Android Studio editor pane | `editor.py` or `intellij.py` | `python3 intellij.py && python3 jetbrains-ui.py`, restart |
 | Android Studio chrome: tabs, sidebar, toolbar | `jetbrains-ui.py` `RAMPS` | `python3 jetbrains-ui.py`, restart |
 | Xcode | `xcode.py` | `python3 xcode.py`, restart |
-| `bat` output, or `git diff` through delta | `bat-theme.py` | `python3 bat-theme.py` |
+| `bat` output, or the code inside a diff | `bat-theme.py` | `python3 bat-theme.py` |
+| Diff washes, blame ramp, which variant delta uses | `delta.py` | `python3 delta.py` |
+| Diff gutter, changed-word highlight | `~/.config/git/common.conf` *(source)* | next diff |
 | Claude Code prompt box, "You" label | `claude-chrome.py` | `python3 claude-chrome.py`, restart |
 | Claude Code status line | `~/.claude/statusline-command.py` *(source)* | next turn |
 
@@ -37,6 +39,7 @@ Everything here is **output**. Editing it is pointless; the next rebuild wins.
 ~/Library/Application Support/Google/AndroidStudio*/colors/Umber*.icls
 ~/Library/Application Support/Google/AndroidStudio*/plugins/umber-theme.jar
 ~/Library/Developer/Xcode/UserData/FontAndColorThemes/Umber*.xccolortheme
+~/.config/git/umber-delta.conf             delta's per-variant half
 ~/.config/umber/palette.json               written by build.py, read by every emitter
 ~/.config/umber/stagger.json               written by optimise-stagger.py
 ~/.config/umber/{specimen,code}.svg        written by the renderers
@@ -50,8 +53,9 @@ These are **source**, edit directly:
 ~/.config/fish/conf.d/umber-theme.fish     shell syntax colours
 ~/.config/fish/functions/umber.fish        the variant switcher
 ~/.claude/statusline-command.py            the status line
-~/.config/bat/config                       selects the bat/delta theme
-~/.config/git/config                       [delta] syntax-theme
+~/.config/bat/config                       picks Umber per macOS appearance
+~/.config/git/common.conf                  delta's ANSI-named half (gutter, emph)
+~/.config/git/umber-delta                  the pager wrapper that picks the variant
 ~/.config/nvim/lua/config/lazy.lua         selects the colorscheme
 ```
 
@@ -84,6 +88,7 @@ python3 intellij.py       # Android Studio .icls editor schemes
 python3 jetbrains-ui.py   # Android Studio UI theme plugin (umber-theme.jar)
 python3 xcode.py          # ~/Library/Developer/Xcode/UserData/FontAndColorThemes
 python3 bat-theme.py      # bat/delta .tmTheme, rebuilds bat's cache
+python3 delta.py          # ~/.config/git/umber-delta.conf
 
 python3 render-specimen.py && rsvg-convert -w 2400 specimen.svg -o specimen.png
 python3 render-code.py    && rsvg-convert -w 2400 code.svg -o code.png
@@ -114,8 +119,59 @@ fixed timestamp so the container is stable too).
 
 Both highlight through Sublime `.tmTheme` files and both default to Monokai
 Extended. With delta as the git pager that meant every diff read on this machine
-rendered in an unrelated palette. `bat-theme.py` emits Umber `.tmTheme` files;
-`~/.config/bat/config` and `git config delta.syntax-theme` select them.
+rendered in an unrelated palette. `bat-theme.py` emits Umber `.tmTheme` files.
+
+Selecting them is the awkward part, because a diff has to follow the variant
+the way Ghostty and Neovim do. Both were pinned to the dark theme for a while,
+which is invisible until you are in the light variant and the body text of every
+diff is sitting at 1.54:1.
+
+bat solves it alone: `--theme=auto:system` reads the macOS appearance on every
+invocation. delta cannot. It does detect a dark or light terminal
+(`--detect-dark-light`), but detection only chooses between its own built-in
+defaults: it cannot activate a named feature or select a custom syntax-theme,
+which is where all of Umber's per-variant values live. So delta's config is split
+in two. The ANSI-named half lives in `~/.config/git/common.conf` and needs no
+switch, because named slots resolve against whichever palette is loaded. The half
+that is concrete hex — the `+`/`-` washes, the syntax-theme name, the blame ramp
+— is generated per variant into `umber-delta.conf`, and `~/.config/git/umber-delta`
+resolves the appearance and sets `DELTA_FEATURES` so delta activates the matching
+block.
+
+Three things about delta that are easy to get wrong, all measured rather than
+assumed. The first and third are gated by `delta.py` rather than left to a
+comment:
+
+- **The main `[delta]` section overrides an active feature**, not the reverse. A
+  key set in both places is pinned to the main section's value and the feature
+  quietly does nothing. This is why `syntax-theme` had to leave `git/config`
+  entirely rather than merely gain a per-variant sibling.
+- `BAT_THEME` only reaches delta when `syntax-theme` is unset, so it is no way
+  around the above.
+- **The washes are not the dichromat's channel**, `line-numbers` is. At the
+  chroma a wash sits at, the `+`/`-` pair measures a deuteranopic separation of
+  0.008 dark and 0.011 light against a floor of 0.035, and no hue rotation
+  clears that without failing tritanopia instead. The red/green gutter numbers
+  measure 0.046 and 0.045, so turning `line-numbers` off would quietly drop the
+  diff below the floor the rest of the palette is held to.
+
+The washes are `editor.surfaces()`'s `add` and `delete`, the same two Neovim and
+Android Studio already paint diffs with, at chroma 0.027–0.031 against a ground
+they clear at better than 9:1. Dropping the wash entirely was tried first: with
+`keep-plus-minus-markers = false` a removed line and an added line then render
+identically in the body, and the only thing separating them is a four-character
+number in the gutter. Numbers all passed. It was the render that showed it.
+
+`DELTA_FEATURES` is resolved per invocation by `~/.config/git/umber-delta`, the
+script `core.pager` and `interactive.diffFilter` both point at, so a mid-session
+appearance flip is picked up by the next diff and git hooks and editor
+subprocesses get the same treatment as an interactive shell. Resolving it once
+per shell was tried first: Ghostty swaps its palette live, so the stale value
+went on painting dark washes onto a light terminal for the rest of the session,
+which is the 1.54:1 failure above in a slower form. Forcing a variant by hand
+takes the whole feature name, `DELTA_FEATURES="umber-dark side-by-side"`; the
+additive `+side-by-side` form adds to the features named in git config, where the
+variant is not one, and silently drops the theme.
 
 ## Android Studio needs two artefacts, not one
 
@@ -231,14 +287,15 @@ Run `audit.py`. It exits non-zero on any floor or salience violation, so it can
 gate a script. It is the widest check: it alone tests `faint` text, the
 foreground at 0.72 opacity against 0.66 of the floor.
 
-Five emitters gate before writing, each on what it actually emits —
+Six emitters gate before writing, each on what it actually emits —
 `build.py` on the terminal slots, the salience order and accent separation,
 `neovim.py`, `intellij.py`, `xcode.py` and `bat-theme.py` on every syntax role
 (contrast and dichromat separation) via `editor.audit`, `intellij.py` and
-`xcode.py` additionally on their own surface sets. So a violating palette never
-reaches those, but passing one of them is not the same as passing `audit.py`.
-`claude-chrome.py` and `jetbrains-ui.py` consume an already-audited palette and
-do not re-gate.
+`xcode.py` additionally on their own surface sets, `delta.py` on the foreground
+against every ground it introduces (both diff washes and all three blame steps).
+So a violating palette never reaches those, but passing one of them is not the
+same as passing `audit.py`. `claude-chrome.py` and `jetbrains-ui.py` consume an
+already-audited palette and do not re-gate.
 
 `adjust-cell-height = 12%` was verified against both JetBrains Mono and Monaspace
 Neon and is correct for either. Monaspace has a 5.7% shorter natural line height

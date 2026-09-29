@@ -36,7 +36,7 @@ MANIFEST = {
     "editor.py": LIBRARY, "studio.py": LIBRARY,
     "build.py": GENERATOR, "claude-chrome.py": GENERATOR, "neovim.py": GENERATOR,
     "intellij.py": GENERATOR, "jetbrains-ui.py": GENERATOR, "xcode.py": GENERATOR,
-    "bat-theme.py": GENERATOR,
+    "bat-theme.py": GENERATOR, "delta.py": GENERATOR,
     "render-specimen.py": GENERATOR, "render-code.py": GENERATOR,
     "audit.py": AUDIT,
     "optimise-stagger.py": TOOL,
@@ -54,6 +54,7 @@ OUTPUTS = {
     "xcode": "~/Library/Developer/Xcode/UserData/FontAndColorThemes/Umber*.xccolortheme",
     "icls": "~/Library/Application Support/Google/AndroidStudio*/colors/Umber*.icls",
     "jar": "~/Library/Application Support/Google/AndroidStudio*/plugins/umber-theme.jar",
+    "delta": "~/.config/git/umber-delta.conf",
     "palette": "~/.config/umber/palette.json",
 }
 
@@ -64,6 +65,7 @@ OUTPUTS = {
 WRITES = {
     "build.py": ["ghostty", "palette"], "neovim.py": ["nvim", "lualine"],
     "bat-theme.py": ["bat"], "claude-chrome.py": ["claude"], "xcode.py": ["xcode"],
+    "delta.py": ["delta"],
     "intellij.py": ["icls"], "jetbrains-ui.py": ["jar"],
     "render-specimen.py": [], "render-code.py": [],
 }

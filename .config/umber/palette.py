@@ -33,12 +33,13 @@ def contrast(a, b):
     return (hi+0.05)/(lo+0.05)
 
 
-def enforce(failures):
+def enforce(failures, what="floor violated"):
     """Stop before writing if any floor was missed.
 
     Every emitter gates the same way. Naming the failures beats the bare
     "contrast floor violated" each one used to raise, which said nothing about
-    which variant or which check.
+    which variant or which check. `what` is for the gates that are not floors:
+    delta.py also refuses on a config key that would pin its own output out.
     """
     if failures:
-        raise SystemExit("not shipping — floor violated: " + ", ".join(failures))
+        raise SystemExit(f"not shipping — {what}: " + ", ".join(failures))
