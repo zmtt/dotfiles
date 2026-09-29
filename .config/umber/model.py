@@ -25,8 +25,8 @@ HUES = {"red": 33.0, "green": 138.0, "yellow": 72.0,
 # Near-uniform lightness keeps the palette calm, but perfectly uniform lightness
 # is what makes hues collapse into each other for colour-blind viewers. Solved
 # by optimise-stagger.py against the chroma model above.
-STAGGER = {"red": -0.044, "green": +0.005, "yellow": +0.009,
-           "blue": -0.031, "magenta": -0.030, "cyan": +0.043}
+STAGGER = {"red": -0.032, "green": +0.012, "yellow": +0.008,
+           "blue": -0.041, "magenta": -0.044, "cyan": +0.048}
 
 # No two colours that carry distinct meaning may be closer than this for any
 # dichromat, measured by perceptual.worst_separation. It is a collapse detector,
@@ -40,9 +40,19 @@ SEPARATION_FLOOR = 0.035
 # scale, plus the readable floor each variant gates against. build.py builds
 # from these and optimise-stagger.py scores candidates against them; a mirrored
 # copy is exactly the stale-fit failure this module exists to prevent.
-ACC_L = {"dark": 0.745, "light": 0.500}
+ACC_L = {"dark": 0.785, "light": 0.500}
 CSCALE = {"dark": 1.00, "light": 1.05}
 FLOOR = {"dark": 4.5, "light": 4.5}
+
+# APCA |Lc| floors, gated beside FLOOR because WCAG 2 overstates contrast near
+# black: at matched ratios the dark variant read far weaker than the light one
+# (comments Lc 34 against 70). APCA's own guidance is Lc 75 for body text, 60
+# for content, 45 for large text and 30 for spot-readable. syntax sits at 45
+# because that is where the editor roles already are and cannot rise from:
+# red loses its chroma above about Lc 62 on the dark ground, errors must stay
+# on top, and compressing the stack under that ceiling drops separation below
+# SEPARATION_FLOOR. comment is the floor for text meant to recede.
+APCA_FLOOR = {"body": 75, "accent": 52, "syntax": 45, "comment": 38}
 
 def chroma_for(hue, scale=1.0):
     warmth = (math.cos(math.radians(hue - EMBER)) + 1) / 2

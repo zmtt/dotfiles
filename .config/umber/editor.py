@@ -24,8 +24,8 @@ worst-case separation of 0.004 (light, tritanopia, function against type) while
 the terminal accents alongside them held 0.035 or better.
 """
 from perceptual import hex_lr, lch, solve, worst_separation
-from palette import contrast, lum
-from model import EMBER, SEPARATION_FLOOR
+from palette import apca, contrast, lum
+from model import APCA_FLOOR, EMBER, SEPARATION_FLOOR
 
 # Roughly even chroma: no structural role may be muted relative to another.
 # Errors sit higher because they are rare and must interrupt.
@@ -104,9 +104,11 @@ def syntax(V, stagger=None):
         "member":   (9.2 if dark else 8.0, hue["green"], SYNTAX_C),
         "param":    (9.6 if dark else 8.6, hue["yellow"], 0.030),
         # Punctuation separates identifiers; it should not compete with them.
-        # Below the foreground, above the comments.
-        "punct":    (6.2 if dark else 5.4, fg_h, 0.012),
-        "muted":    (5.0 if dark else 4.8, fg_h, 0.014),
+        # Below every hued role, above the comments; audit() holds the order,
+        # because ROLE_STAGGER moves the roles and once pushed type and number
+        # under a fixed punct target.
+        "punct":    (5.8 if dark else 4.95, fg_h, 0.012),
+        "muted":    (5.5 if dark else 4.8, fg_h, 0.014),
     }
     return {role: solve(target * st.get(FAMILY.get(role, role), 1.0), bg, C, h)
             for role, (target, h, C) in spec.items()}
@@ -139,6 +141,13 @@ def audit(V, S, floor=4.5):
     bg = V["background"]
     bad = [(k, round(contrast(v, bg), 2)) for k, v in S.items()
            if contrast(v, bg) < floor]
+    bad += [(f"{k} Lc", round(apca(S[k], bg), 1)) for k in ROLE_STAGGER
+            if apca(S[k], bg) < APCA_FLOOR["syntax"]]
+    if apca(S["muted"], bg) < APCA_FLOOR["comment"]:
+        bad.append(("muted Lc", round(apca(S["muted"], bg), 1)))
+    c = {k: contrast(v, bg) for k, v in S.items()}
+    if not c["muted"] < c["punct"] < min(c[k] for k in ROLE_STAGGER):
+        bad.append(("order muted < punct < roles", round(c["punct"], 2)))
     dE, pair = separation(S, V["foreground"])
     if dE < SEPARATION_FLOOR:
         bad.append((f"separation {pair[0]}/{pair[1]} {pair[2]}", round(dE, 4)))
