@@ -4,7 +4,7 @@
   "overrides": {
     "userMessageBackground": "#342c26",
     "userMessageBackgroundHover": "#493f37",
-    "inverseText": "#ece6e0",
+    "inverseText": "#e8e1dc",
     "briefLabelYou": "#f98e53"
   }
 }
