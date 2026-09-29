@@ -28,6 +28,20 @@ def gamut_map_lr(lr, C, H):
         else: hi = mid
     return lo, True
 
+def ground_lift(bg, H):
+    """Chroma a ground takes from a colour of hue H, to add back.
+
+    Chroma is how far a colour sits from grey, but what the eye reads is how far
+    it sits from its ground. A tinted ground already carries some of the hue
+    nearest its own, so an accent there reads flatter by the ground's chroma
+    projected onto it: on a slate ground at C 0.015 the blue lost 29% of its
+    distance. Adding that projection back keeps every colour as far from its
+    ground as the model intends. On a near-neutral ground it is about zero.
+    """
+    _, C, h = lch(bg)
+    return C * max(0.0, math.cos(math.radians(H - h)))
+
+
 def hex_lr(lr, C, H):
     """Specify colour in OKLrCH; return sRGB hex."""
     C2, clipped = gamut_map_lr(lr, C, H)
