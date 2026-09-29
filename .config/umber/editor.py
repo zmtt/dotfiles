@@ -47,9 +47,8 @@ ROLE_STAGGER = {"keyword": 1.0, "function": 1.0, "type": 1.0,
 # only in chroma. They are family members rather than competing signals, so they
 # follow their head's offset instead of getting one of their own, and they are
 # excluded from the separation gate because they cannot be pulled apart. On the
-# light ground the distinction is thinner than the chroma numbers suggest:
-# type's requested 0.100 gamut-clips to 0.087 against escape's 0.085, so there
-# the pair is effectively one colour. Accepted: escape paints string escapes
+# light ground they are one colour: at the flat stagger both gamut-clip to
+# about C 0.080 and resolve to the same hex. Accepted: escape paints string escapes
 # and regex metacharacters, which occur inside literals where context already
 # separates them from type names.
 FAMILY = {"constant": "number", "escape": "type"}
@@ -159,13 +158,17 @@ def audit(V, S, floor=4.5):
     bg = V["background"]
     bad = [(k, round(contrast(v, bg), 2)) for k, v in S.items()
            if contrast(v, bg) < floor]
-    bad += [(f"{k} Lc", round(apca(S[k], bg), 1)) for k in ROLE_STAGGER
+    bad += [(f"{k} Lc", round(apca(S[k], bg), 1)) for k in (*ROLE_STAGGER, *FAMILY)
             if apca(S[k], bg) < APCA_FLOOR["syntax"]]
     if apca(S["muted"], bg) < APCA_FLOOR["comment"]:
         bad.append(("muted Lc", round(apca(S["muted"], bg), 1)))
     c = {k: contrast(v, bg) for k, v in S.items()}
     if not c["muted"] < c["punct"] < min(c[k] for k in ROLE_STAGGER):
         bad.append(("order muted < punct < roles", round(c["punct"], 2)))
+    # Neovim and Android Studio paint comments with slot 8, not muted, so it
+    # has to sit under punctuation too.
+    if contrast(V["8"], bg) >= c["punct"]:
+        bad.append(("comments (slot 8) above punct", round(contrast(V["8"], bg), 2)))
     bad += salience(S, V)
     dE, pair = separation(S, V["foreground"])
     if dE < SEPARATION_FLOOR:
