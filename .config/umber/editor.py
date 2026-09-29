@@ -70,8 +70,8 @@ def syntax(V, stagger=None):
 
     # Contrast targets, not lightness targets: the ground differs between
     # variants, and a fixed Lr would drift.
-    body = 8.4 if dark else 6.2
-    quiet = 7.2 if dark else 5.2
+    body = 7.8 if dark else 6.2
+    quiet = 7.0 if dark else 5.2
     fg_h = lch(V["foreground"])[2]
 
     # role -> (contrast target, hue, chroma). One table so the stagger applies

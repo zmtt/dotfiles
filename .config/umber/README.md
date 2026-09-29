@@ -261,11 +261,14 @@ APCA is the third, because WCAG 2 overstates contrast near black. At matched
 ratios the dark variant read far weaker than the light one: comments at Lc 34
 against 70, body text at 73 against 92. `APCA_FLOOR` gates body text, accents,
 syntax roles and comments beside the WCAG floor, in `build.py` and
-`editor.audit`. Every syntax role clears APCA's content level (Lc 60) on the
-dark ground except strings, the deliberately quieter tier, which is why the
-syntax floor is 50. That only holds with `CVD_SAFE` off. With it on, red losing
-its chroma above about Lc 62 caps the stack, and the staggers then need a
-spread it cannot fit.
+`editor.audit`. The dark variant sits just above those floors, not well
+clear of them: body text at Lc 76.5, the weakest accent at 54, syntax roles at
+57 with strings at 52, comments at 39.5. Light text on a dark ground blooms, so
+brightness past readability adds glare and no legibility. A version lifted to
+Lc 80.7 body and 61 accents read as too bright on screen, though a render at
+specimen size could not show it. With `CVD_SAFE` on, the syntax floor of 50
+cannot hold: red losing its chroma above about Lc 62 caps the stack, and the
+staggers then need a spread it cannot fit.
 
 **Separation is measured for normal vision.** `model.CVD_SAFE` is off, so
 `worst_separation` measures trichromat distance only, and every accent and role
