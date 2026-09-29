@@ -4,25 +4,25 @@
 # is actually used, so persistent chrome never outshouts semantic colour.
 
 background = #161a21
-foreground = #cdd8e3
+foreground = #c6d1dc
 cursor-color = #f98e53
 cursor-text = #161a21
 selection-background = #25323f
-selection-foreground = #cdd8e3
+selection-foreground = #c6d1dc
 
 palette = 0=#323b46
-palette = 1=#ff9a84
-palette = 2=#a5c586
-palette = 3=#ebab54
-palette = 4=#92bfe5
-palette = 5=#d1aad3
-palette = 6=#84c8c3
+palette = 1=#f28c76
+palette = 2=#99b979
+palette = 3=#de9e47
+palette = 4=#85b2d8
+palette = 5=#c49dc6
+palette = 6=#78bbb6
 palette = 7=#bbc3cd
-palette = 8=#909aa5
-palette = 9=#ffb3a2
-palette = 10=#b7d59a
-palette = 11=#f8bc6f
-palette = 12=#a4cef3
-palette = 13=#e0bbe1
-palette = 14=#99d7d2
+palette = 8=#838e98
+palette = 9=#ffac99
+palette = 10=#b2d095
+palette = 11=#f3b76a
+palette = 12=#9fcaee
+palette = 13=#dbb6dc
+palette = 14=#94d2cd
 palette = 15=#e1e7ec

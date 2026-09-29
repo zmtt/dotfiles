@@ -16,11 +16,11 @@
 				<key>caret</key>
 				<string>#f98e53</string>
 				<key>foreground</key>
-				<string>#cdd8e3</string>
+				<string>#c6d1dc</string>
 				<key>gutterForeground</key>
 				<string>#565c63</string>
 				<key>invisibles</key>
-				<string>#909aa5</string>
+				<string>#838e98</string>
 				<key>lineHighlight</key>
 				<string>#1e262d</string>
 				<key>selection</key>
@@ -48,7 +48,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#8fb06d</string>
+				<string>#8daf6b</string>
 			</dict>
 		</dict>
 		<dict>
@@ -59,7 +59,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#66c3be</string>
+				<string>#5fbdb6</string>
 			</dict>
 		</dict>
 		<dict>
@@ -70,7 +70,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#ddab6c</string>
+				<string>#d7a565</string>
 			</dict>
 		</dict>
 		<dict>
@@ -81,7 +81,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e3aa5e</string>
+				<string>#dca257</string>
 			</dict>
 		</dict>
 		<dict>
@@ -92,7 +92,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e3aa5e</string>
+				<string>#dca257</string>
 			</dict>
 		</dict>
 		<dict>
@@ -103,7 +103,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#dba0de</string>
+				<string>#d49ad7</string>
 			</dict>
 		</dict>
 		<dict>
@@ -114,7 +114,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#dba0de</string>
+				<string>#d49ad7</string>
 			</dict>
 		</dict>
 		<dict>
@@ -125,7 +125,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#8896a5</string>
+				<string>#8897a5</string>
 			</dict>
 		</dict>
 		<dict>
@@ -136,7 +136,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#8896a5</string>
+				<string>#8897a5</string>
 			</dict>
 		</dict>
 		<dict>
@@ -147,7 +147,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#70baf7</string>
+				<string>#69b4f0</string>
 			</dict>
 		</dict>
 		<dict>
@@ -158,7 +158,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#51c5bf</string>
+				<string>#49beb8</string>
 			</dict>
 		</dict>
 		<dict>
@@ -169,7 +169,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#cdbdac</string>
+				<string>#cdbeac</string>
 			</dict>
 		</dict>
 		<dict>
@@ -191,7 +191,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#cdd8e3</string>
+				<string>#c6d1dc</string>
 			</dict>
 		</dict>
 		<dict>
@@ -202,7 +202,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#e3aa5e</string>
+				<string>#dca257</string>
 			</dict>
 		</dict>
 		<dict>
@@ -213,7 +213,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#ddab6c</string>
+				<string>#d7a565</string>
 			</dict>
 		</dict>
 		<dict>
@@ -224,7 +224,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#ff9982</string>
+				<string>#f9927b</string>
 			</dict>
 		</dict>
 		<dict>
@@ -237,7 +237,7 @@
 				<key>fontStyle</key>
 				<string>bold</string>
 				<key>foreground</key>
-				<string>#e3aa5e</string>
+				<string>#dca257</string>
 			</dict>
 		</dict>
 		<dict>
@@ -250,7 +250,7 @@
 				<key>fontStyle</key>
 				<string>underline</string>
 				<key>foreground</key>
-				<string>#70baf7</string>
+				<string>#69b4f0</string>
 			</dict>
 		</dict>
 		<dict>
@@ -283,7 +283,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#8fb06d</string>
+				<string>#8daf6b</string>
 			</dict>
 		</dict>
 		<dict>
@@ -294,7 +294,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#ff9982</string>
+				<string>#f9927b</string>
 			</dict>
 		</dict>
 		<dict>
@@ -305,7 +305,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#ddab6c</string>
+				<string>#d7a565</string>
 			</dict>
 		</dict>
 	</array>
