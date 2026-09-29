@@ -274,10 +274,17 @@ of calm: types sank below keywords, and the accents never quite sat level. To
 design for colour-blind viewers again, set `CVD_SAFE = True` and re-solve
 `STAGGER` and `ROLE_STAGGER` with `optimise-stagger.py`.
 
-**The grounds are umber, not grey.** `#1f1915` and `#f9f4ee` carry chroma 0.012
-and 0.010 at warm hues (56 and 73), against 0.004 and 0.003 before, so the accents sit in an earth tone instead of on black
-or white. The cool hues lean earthward to match: plum at 325 rather than pink at
-340, olive at 130, patina at 190, slate at 245.
+**The grounds stay near-neutral.** `#171614` and `#f8f7f5` sit at chroma 0.004
+and 0.003. A tinted ground was tried both ways and measured by each accent's
+chromatic distance from it. An umber ground (`#1f1915`) muted the warm accents
+that carry errors and changes. A slate one (`#161a21`) made them glow, red and
+yellow 11 to 16% further out, but drained blue by 29%, to the weakest of any
+accent in any variant, and blue paints functions. Only the neutral ground leaves
+every accent where the chroma model put it. Readability and separation came out
+the same on all three, because every colour is solved to a contrast target.
+
+**The cool hues lean earthward**: plum at 325 rather than pink at 340, olive at
+130, patina at 190, slate at 245.
 
 **Staggers push toward contrast.** A `STAGGER` offset lightens a slot on the
 dark ground and darkens it on the light one, so each accent keeps the same rank
