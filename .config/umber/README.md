@@ -279,13 +279,16 @@ design for colour-blind viewers again, set `CVD_SAFE = True` and re-solve
 
 **The grounds are slate, and chroma is measured against them.** `#161a21` and
 `#f3f6fa` sit at chroma 0.015 and 0.006, cool against warm accents, which is the
-pairing that makes the ember and ochre glow: red and yellow sit 10 to 16%
-further from the ground than on a neutral one. A tinted ground also takes
+pairing that makes the ember and ochre glow: the warm accents and roles sit 7
+to 15% further from the ground than on a neutral one on dark, 2 to 9% on light. A tinted ground also takes
 chroma from the accents nearest its own hue, and uncompensated slate drained
 blue by 29%. `perceptual.ground_lift` adds the ground's projected chroma back
-to every accent and syntax role, so the cool ones stay within 8% of where a
-neutral ground puts them. The neutral hue `nh` follows the ground to 250, so
-greys, selection and editor surfaces are one temperature with it. Kept warm,
+to every hued accent and syntax role, so the cool ones stay within 6% of where
+a neutral ground puts them. Punctuation and comments take no lift: they sit on
+the foreground's hue, next to the ground's own, and a lift would tint them past
+plain text. The neutral hue `nh` moves to 250, beside the grounds' 262 and 255,
+so greys, selection, editor surfaces and the Claude Code prompt box are one
+temperature with them. Kept warm,
 they put a brown title bar on a slate window. An umber ground (`#1f1915`) was
 tried first and muted the warm accents instead. The neutral-ground version is
 tagged `umber-neutral` in the dotfiles repo.
@@ -312,7 +315,7 @@ targets are arguments to `build()` in `build.py`.
 | `STAGGER` | `model.py` | Per-hue lightness offset, for colour-vision separation. Zero while `CVD_SAFE` is off |
 | `CVD_SAFE` | `model.py` | Measure separation for dichromats (True) or normal vision (False) |
 | `ROLE_STAGGER` | `editor.py` | Per-role contrast-target multiplier, the same separation for the editor roles |
-| `SEPARATION_FLOOR` | `model.py` | Minimum dichromat-simulated distance any two meaning-carrying colours may sit at |
+| `SEPARATION_FLOOR` | `model.py` | Minimum distance any two meaning-carrying colours may sit at, for the eyes `CVD_SAFE` names |
 | `APCA_FLOOR` | `model.py` | Perceptual contrast floors (Lc) for body text, accents, syntax roles, comments |
 | `bg_hex` | `build.py` | Ground for each variant |
 | `targets` | `build.py` | Contrast targets the neutral ramp is solved to |

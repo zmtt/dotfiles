@@ -53,7 +53,7 @@ def report(label, P, notes):
     rs = []
     for i in range(1,7):
         a = contrast(P[i],bg); rs += [a, contrast(P[i+8],bg)]
-        print(f"  {NAMES[i]:<8} {P[i]} {a:5.2f}:1  C={chroma_for(HUES[NAMES[i]]):.3f}  bright {P[i+8]}")
+        print(f"  {NAMES[i]:<8} {P[i]} {a:5.2f}:1  C={lch(P[i])[1]:.3f}  bright {P[i+8]}")
     print(f"  accents {min(rs):.2f} .. {max(rs):.2f}:1")
     if notes: print("  gamut:", "; ".join(notes))
     sep, pair = worst_separation({NAMES[i]: P[i] for i in range(1, 7)})

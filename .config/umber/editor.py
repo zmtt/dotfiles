@@ -84,7 +84,8 @@ def syntax(V, stagger=None):
         "number":   (body, hue["yellow"], SYNTAX_C),
         "constant": (body, hue["yellow"], SYNTAX_C * 1.15),
         "escape":   (body, hue["cyan"], SYNTAX_C * 0.85),
-        "error":    (body, hue["red"], ERROR_C),
+        # A step above the body roles: errors interrupt. salience() holds it.
+        "error":    (body * 1.03, hue["red"], ERROR_C),
         # Instance variables and properties. Green, on the content side of the
         # taxonomy the editor accents use: warm is content (strings green,
         # literals yellow, errors red), cool is structure (keywords magenta,
@@ -104,9 +105,31 @@ def syntax(V, stagger=None):
         "punct":    (5.8 if dark else 4.95, fg_h, 0.012),
         "muted":    (5.5 if dark else 4.8, fg_h, 0.014),
     }
+    # punct and muted are near-neutrals on the foreground's hue, which sits next
+    # to a tinted ground's own, so a lift would tint them past plain text.
     return {role: solve(target * st.get(FAMILY.get(role, role), 1.0), bg,
-                        C + ground_lift(bg, h), h)
+                        C + (0.0 if role in ("punct", "muted") else ground_lift(bg, h)), h)
             for role, (target, h, C) in spec.items()}
+
+
+def salience(S, V):
+    """The ordering separation cannot see, as a list of violations.
+
+    An error out-contrasts every body role and keeps its chroma, and neither
+    member nor param rises to plain text. audit() gates on it and the role
+    solver rejects candidates by it, from this one definition, because the two
+    used to carry separate copies and disagreed about the shipped values.
+    """
+    bg = V["background"]
+    c = {r: contrast(S[r], bg) for r in S}
+    bad = []
+    if c["error"] < max(c[r] for r in ("keyword", "function", "type", "string", "number")):
+        bad.append(("error below a body role", round(c["error"], 2)))
+    if lch(S["error"])[1] < ERROR_C * 0.9:
+        bad.append(("error chroma", round(lch(S["error"])[1], 3)))
+    if max(c["member"], c["param"]) >= contrast(V["foreground"], bg):
+        bad.append(("member/param above plain text", round(max(c["member"], c["param"]), 2)))
+    return bad
 
 
 def separation(S, foreground=None):
@@ -143,6 +166,7 @@ def audit(V, S, floor=4.5):
     c = {k: contrast(v, bg) for k, v in S.items()}
     if not c["muted"] < c["punct"] < min(c[k] for k in ROLE_STAGGER):
         bad.append(("order muted < punct < roles", round(c["punct"], 2)))
+    bad += salience(S, V)
     dE, pair = separation(S, V["foreground"])
     if dE < SEPARATION_FLOOR:
         bad.append((f"separation {pair[0]}/{pair[1]} {pair[2]}", round(dE, 4)))
