@@ -21,6 +21,7 @@ if status is-interactive
     starship init fish | source
     zoxide init fish | source
     fzf --fish | source
+    jj util completion fish | source
 
     # eza ls family (color/icons auto-disable when piped)
     set -l eza "eza --icons --group-directories-first"
@@ -32,7 +33,7 @@ if status is-interactive
     alias vim="nvim"
 
     # Brew upgrade and cleanup
-    alias brew-up="brew upgrade && brew cleanup --prune=all"
+    alias brewup="brew update && brew upgrade -y && brew cleanup --prune=all"
     alias brewfile="brew bundle --file=~/.config/brew/Brewfile"
 
     # Dotfiles bare repo
@@ -40,4 +41,7 @@ if status is-interactive
 
     # Bear
     alias bearcli="/Applications/Bear.app/Contents/MacOS/bearcli"
+
+    # Claude
+    alias yolo="claude --dangerously-skip-permissions"
 end
