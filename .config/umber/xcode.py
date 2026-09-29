@@ -18,9 +18,10 @@ P = json.load(open(_os.path.join(_HERE, "palette.json")))
 # higher-frequency class, so per the salience law the sys()-derived variants
 # keep the user hue one contrast step toward the ground, leaving the user's
 # own API as the full-strength accent.
-# The lifted system variants may not drop through the readable floor: the
-# staggered parents sit at different heights, and a fixed multiplier under the
-# lowest of them lands below 4.5. Solved to the floor plus a hair instead.
+# The lifted system variants may not drop through the readable floor: whenever
+# the parents sit at different heights, as they do with the staggers on, a fixed
+# multiplier under the lowest of them lands below 4.5. Solved to the floor plus
+# a hair instead.
 SYS_FLOOR = 4.6
 
 

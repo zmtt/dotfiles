@@ -66,6 +66,6 @@ def build(V, x, y, w, h, title):
 W,H = 620, 570
 s = ['<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="630" viewBox="0 0 1300 630">',
      '<rect width="1300" height="630" fill="#909090"/>',
-     build(P["dark"], 20, 30, W, H, "UMBER  #171614"),
-     build(P["light"], 660, 30, W, H, "UMBER LIGHT  #f8f7f5"), '</svg>']
+     build(P["dark"], 20, 30, W, H, f"UMBER  {P['dark']['background']}"),
+     build(P["light"], 660, 30, W, H, f"UMBER LIGHT  {P['light']['background']}"), '</svg>']
 write_atomic(_os.path.join(_HERE, "specimen.svg"), "\n".join(s))

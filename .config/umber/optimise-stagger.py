@@ -9,18 +9,22 @@ looking uneven.
   editor.ROLE_STAGGER  the editor roles, multipliers on each contrast target
 
 Both maximise the same thing: the smallest perceptual distance between any two
-colours, across deuteranopia, protanopia and tritanopia, on both variants at
-once. That measurement is perceptual.worst_separation, shared with the gates in
+colours, across deuteranopia, protanopia and tritanopia when model.CVD_SAFE is
+on (normal vision only when it is off), on both variants at once. That measurement is perceptual.worst_separation, shared with the gates in
 build.py, audit.py and editor.audit so the solver and the gate cannot disagree.
 
 The editor set exists because re-levelling chroma per role while solving every
 role to one flat contrast target removed both non-hue axes at once, which is
 the failure model.STAGGER was already there to prevent.
 
-It deliberately does NOT constrain the semantic-over-chrome salience ordering.
-That ordering is not strictly invariant under STAGGER — gamut clipping depends
-on lightness, so realized chroma moves with the offsets — but build.py gates on
-salience directly, which is where that belongs.
+The accent solver deliberately does NOT constrain the semantic-over-chrome
+salience ordering. That ordering is not strictly invariant under STAGGER —
+gamut clipping depends on lightness, so realized chroma moves with the offsets
+— but build.py gates on salience directly, which is where that belongs.
+
+The role solver does constrain salience, because it could not otherwise see
+it: unconstrained, it found its best separation by dimming error below the
+body roles and lifting member toward plain text.
 
 Both solvers do constrain contrast, with a margin above the floor rather than
 the floor itself: separation will otherwise buy its last thousandth by pushing
@@ -31,10 +35,10 @@ import math
 import os
 import random
 
-from editor import ROLE_STAGGER, FAMILY, syntax, separation
-from model import ACC_L, CSCALE, FLOOR, HUES, STAGGER, chroma_for
-from palette import contrast
-from perceptual import hex_lr, l_to_lr, worst_separation
+from editor import ROLE_STAGGER, FAMILY, salience, syntax, separation
+from model import ACC_L, APCA_FLOOR, CSCALE, CVD_SAFE, FLOOR, HUES, STAGGER, chroma_for
+from palette import apca, contrast
+from perceptual import ground_lift, hex_lr, l_to_lr, worst_separation
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 KEYS = list(HUES)
@@ -66,8 +70,9 @@ ROLE_GROUNDS = {v: PALETTE[v] for v in ("dark", "light")}
 ROLE_MARGIN = 0.30
 
 
-def colours(stagger, base_lr, cscale):
-    return {k: hex_lr(base_lr + stagger[k], chroma_for(HUES[k], cscale), HUES[k])[0]
+def colours(stagger, base_lr, cscale, d, bg):
+    return {k: hex_lr(base_lr + d * stagger[k],
+                      chroma_for(HUES[k], cscale) + ground_lift(bg, HUES[k]), HUES[k])[0]
             for k in KEYS}
 
 
@@ -82,10 +87,12 @@ def accent_score(stagger, margin=ACCENT_MARGIN):
     """
     worst = float("inf")
     for name, (base, cscale) in GROUNDS.items():
-        cols = colours(stagger, base, cscale)
         bg = PALETTE[name]["background"]
+        cols = colours(stagger, base, cscale, 1 if name == "dark" else -1, bg)
         floor = FLOOR[name] + margin
         if any(contrast(c, bg) < floor for c in cols.values()):
+            return None
+        if any(apca(c, bg) < APCA_FLOOR["accent"] for c in cols.values()):
             return None
         worst = min(worst, worst_separation(cols)[0])
     return worst
@@ -105,8 +112,14 @@ def role_score(stagger, margin=ROLE_MARGIN):
     worst = float("inf")
     for name, V in ROLE_GROUNDS.items():
         S = syntax(V, stagger)
+        bg = V["background"]
         floor = FLOOR[name] + margin
-        if any(contrast(S[r], V["background"]) < floor for r in moved):
+        c = {r: contrast(S[r], bg) for r in moved}
+        if any(c[r] < floor for r in moved):
+            return None
+        if any(apca(S[r], bg) < APCA_FLOOR["syntax"] for r in moved):
+            return None
+        if salience(S, V):
             return None
         worst = min(worst, separation(S, V["foreground"])[0])
     return worst
@@ -182,6 +195,11 @@ def report(label, keys, current, cur_score, best_score, best, vfmt, unit):
 
 
 if __name__ == "__main__":
+    if not CVD_SAFE:
+        print("model.CVD_SAFE is off: separation is measured for normal vision and the\n"
+              "staggers stay zero, so there is nothing to solve. Set CVD_SAFE = True to\n"
+              "design for dichromats, then rerun.")
+        raise SystemExit(0)
     acc_cur = accent_score(STAGGER, 0)
     acc_best_score, acc_best = maximise(accent_score, KEYS, 0.0, MAX_SPREAD,
                                         SAMPLES, STAGGER, seed=20260814)

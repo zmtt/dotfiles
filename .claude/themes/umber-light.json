@@ -2,9 +2,9 @@
   "name": "Umber Light",
   "base": "light",
   "overrides": {
-    "userMessageBackground": "#eee7de",
-    "userMessageBackgroundHover": "#f9f3ed",
-    "inverseText": "#342b21",
+    "userMessageBackground": "#efe6df",
+    "userMessageBackgroundHover": "#faf3ee",
+    "inverseText": "#32291f",
     "briefLabelYou": "#a04707"
   }
 }

@@ -38,13 +38,23 @@ try:
     # the moment the ground changed, and five of six no longer matched.
     FALLBACK = {"1": "#e5806b", "2": "#92bc84", "3": "#e0a049",
                 "5": "#c394b2", "6": "#88c5c5", "8": "#8a7f75"}
+    # Truecolor bypasses Ghostty's palette swap, so the variant has to follow the
+    # macOS appearance here, per render, the way ~/.config/git/umber-delta does:
+    # the dark slots on the cream light ground measure 2.0 to 2.7:1.
+    # AppleInterfaceStyle is absent, not "Light", in light mode.
+    try:
+        style = subprocess.run(["defaults", "read", "-g", "AppleInterfaceStyle"],
+                               capture_output=True, text=True, timeout=1).stdout.strip()
+    except Exception:
+        style = "Dark"
+    variant = "dark" if style == "Dark" else "light"
     try:
         with open(os.path.expanduser("~/.config/umber/palette.json")) as fh:
-            slots = json.load(fh)["dark"]
+            slots = json.load(fh)[variant]
     except Exception:
         slots = {}
     if not isinstance(slots, dict):
-        slots = {}          # "dark" holding a scalar would raise inside slot()
+        slots = {}          # a variant holding a scalar would raise inside slot()
 
     def slot(n):
         """Per-slot validation: a palette that parses can still hold a value

@@ -20,7 +20,9 @@ theme file — the next rebuild overwrites it.
 | Android Studio editor pane | `editor.py` or `intellij.py` | `python3 intellij.py && python3 jetbrains-ui.py`, restart |
 | Android Studio chrome: tabs, sidebar, toolbar | `jetbrains-ui.py` `RAMPS` | `python3 jetbrains-ui.py`, restart |
 | Xcode | `xcode.py` | `python3 xcode.py`, restart |
-| `bat` output, or `git diff` through delta | `bat-theme.py` | `python3 bat-theme.py` |
+| `bat` output, or the code inside a diff | `bat-theme.py` | `python3 bat-theme.py` |
+| Diff washes, blame ramp, which variant delta uses | `delta.py` | `python3 delta.py` |
+| Diff gutter, changed-word highlight | `~/.config/git/common.conf` *(source)* | next diff |
 | Claude Code prompt box, "You" label | `claude-chrome.py` | `python3 claude-chrome.py`, restart |
 | Claude Code status line | `~/.claude/statusline-command.py` *(source)* | next turn |
 
@@ -37,6 +39,7 @@ Everything here is **output**. Editing it is pointless; the next rebuild wins.
 ~/Library/Application Support/Google/AndroidStudio*/colors/Umber*.icls
 ~/Library/Application Support/Google/AndroidStudio*/plugins/umber-theme.jar
 ~/Library/Developer/Xcode/UserData/FontAndColorThemes/Umber*.xccolortheme
+~/.config/git/umber-delta.conf             delta's per-variant half
 ~/.config/umber/palette.json               written by build.py, read by every emitter
 ~/.config/umber/stagger.json               written by optimise-stagger.py
 ~/.config/umber/{specimen,code}.svg        written by the renderers
@@ -50,8 +53,9 @@ These are **source**, edit directly:
 ~/.config/fish/conf.d/umber-theme.fish     shell syntax colours
 ~/.config/fish/functions/umber.fish        the variant switcher
 ~/.claude/statusline-command.py            the status line
-~/.config/bat/config                       selects the bat/delta theme
-~/.config/git/config                       [delta] syntax-theme
+~/.config/bat/config                       picks Umber per macOS appearance
+~/.config/git/common.conf                  delta's ANSI-named half (gutter, emph)
+~/.config/git/umber-delta                  the pager wrapper that picks the variant
 ~/.config/nvim/lua/config/lazy.lua         selects the colorscheme
 ```
 
@@ -60,7 +64,8 @@ These are **source**, edit directly:
 ```
 python3 check.py          # classification, runs, idempotency, formats, modes,
                           # cross-emitter agreement, artefact-vs-git drift
-python3 check.py --slow   # also runs the sampling optimiser
+python3 check.py --slow   # also runs the sampling optimiser, a no-op
+                          # while model.CVD_SAFE is off
 ```
 
 Its MANIFEST must classify every `.py` here, and it fails if one is missing —
@@ -84,6 +89,7 @@ python3 intellij.py       # Android Studio .icls editor schemes
 python3 jetbrains-ui.py   # Android Studio UI theme plugin (umber-theme.jar)
 python3 xcode.py          # ~/Library/Developer/Xcode/UserData/FontAndColorThemes
 python3 bat-theme.py      # bat/delta .tmTheme, rebuilds bat's cache
+python3 delta.py          # ~/.config/git/umber-delta.conf
 
 python3 render-specimen.py && rsvg-convert -w 2400 specimen.svg -o specimen.png
 python3 render-code.py    && rsvg-convert -w 2400 code.svg -o code.png
@@ -114,8 +120,62 @@ fixed timestamp so the container is stable too).
 
 Both highlight through Sublime `.tmTheme` files and both default to Monokai
 Extended. With delta as the git pager that meant every diff read on this machine
-rendered in an unrelated palette. `bat-theme.py` emits Umber `.tmTheme` files;
-`~/.config/bat/config` and `git config delta.syntax-theme` select them.
+rendered in an unrelated palette. `bat-theme.py` emits Umber `.tmTheme` files.
+
+Selecting them is the awkward part, because a diff has to follow the variant
+the way Ghostty and Neovim do. Both were pinned to the dark theme for a while,
+which is invisible until you are in the light variant and the body text of every
+diff is sitting at 1.54:1.
+
+bat solves it alone: `--theme=auto:system` reads the macOS appearance on every
+invocation. delta cannot. It does detect a dark or light terminal
+(`--detect-dark-light`), but detection only chooses between its own built-in
+defaults: it cannot activate a named feature or select a custom syntax-theme,
+which is where all of Umber's per-variant values live. So delta's config is split
+in two. The ANSI-named half lives in `~/.config/git/common.conf` and needs no
+switch, because named slots resolve against whichever palette is loaded. The half
+that is concrete hex — the `+`/`-` washes, the syntax-theme name, the blame ramp
+— is generated per variant into `umber-delta.conf`, and `~/.config/git/umber-delta`
+resolves the appearance and sets `DELTA_FEATURES` so delta activates the matching
+block.
+
+Three things about delta that are easy to get wrong, all measured rather than
+assumed. The first and third are gated by `delta.py` rather than left to a
+comment:
+
+- **The main `[delta]` section overrides an active feature**, not the reverse. A
+  key set in both places is pinned to the main section's value and the feature
+  quietly does nothing. This is why `syntax-theme` had to leave `git/config`
+  entirely rather than merely gain a per-variant sibling.
+- `BAT_THEME` only reaches delta when `syntax-theme` is unset, so it is no way
+  around the above.
+- **The washes are not the dichromat's channel**, `line-numbers` is. On the
+  original palette the `+`/`-` washes measured a deuteranopic separation of
+  0.008 dark and 0.011 light against a floor of 0.035, and no hue rotation
+  clears that without failing tritanopia instead, while the red/green gutter
+  numbers measured 0.046 and 0.045. With `CVD_SAFE` off and the staggers flat
+  the gutter no longer clears it either (about 0.013 to 0.015). For normal
+  vision both channels separate: the washes at about 0.043 to 0.046, the
+  gutter at about 0.17. `delta.py` still refuses to build with
+  `line-numbers` off.
+
+The washes are `editor.surfaces()`'s `add` and `delete`, the same two Neovim and
+Android Studio already paint diffs with, at chroma 0.024–0.031 against a ground
+they clear at better than 9:1. Dropping the wash entirely was tried first: with
+`keep-plus-minus-markers = false` a removed line and an added line then render
+identically in the body, and the only thing separating them is a four-character
+number in the gutter. Numbers all passed. It was the render that showed it.
+
+`DELTA_FEATURES` is resolved per invocation by `~/.config/git/umber-delta`, the
+script `core.pager` and `interactive.diffFilter` both point at, so a mid-session
+appearance flip is picked up by the next diff and git hooks and editor
+subprocesses get the same treatment as an interactive shell. Resolving it once
+per shell was tried first: Ghostty swaps its palette live, so the stale value
+went on painting dark washes onto a light terminal for the rest of the session,
+which is the 1.54:1 failure above in a slower form. Forcing a variant by hand
+takes the whole feature name, `DELTA_FEATURES="umber-dark side-by-side"`; the
+additive `+side-by-side` form adds to the features named in git config, where the
+variant is not one, and silently drops the theme.
 
 ## Android Studio needs two artefacts, not one
 
@@ -172,14 +232,17 @@ In a terminal, colour marks the exceptional, so warm hues carry chroma and cool
 hues recede as chrome. In an editor nearly every glyph is coloured and the
 high-frequency tokens are keywords, functions and types. Reusing the terminal
 slots paints that scaffold in the three most desaturated colours in the palette
-(blue 0.059, cyan 0.062, magenta 0.069) while strings and literals sit at 0.128
-— code reads as beige with the strings shouting.
+(blue, cyan and magenta, about 0.06 to 0.07 chroma) while red and yellow run
+about 0.11 to 0.14 — code reads as beige with the strings shouting.
 
 So editors inherit the hue geometry, keeping the family resemblance, but chroma
-is re-levelled: keywords, functions, types, strings and numbers land within 0.001
-of each other, against a 0.070 spread across the terminal slots they replace.
-Roles that should not compete stay outside that band — punctuation 0.013 and
-comments 0.014 below the identifiers they separate, errors 0.130 above. `render-code.py` renders a before/after specimen.
+is re-levelled: keywords, functions, types, strings and numbers all ask for the
+same chroma, 0.100. On dark they land at 0.100 to 0.115, the spread coming from
+`ground_lift`. On light, type gamut-clips to about 0.08 while the rest hold
+0.10 to 0.107, since a cyan that dark cannot carry more in sRGB. The terminal
+slots they replace spread about 0.06 to 0.08. Roles that should not compete stay
+outside that band — punctuation about 0.012 and comments about 0.014 below the
+identifiers they separate, errors about 0.13 above. `render-code.py` renders a before/after specimen.
 
 ## Design rules the generator enforces
 
@@ -196,10 +259,67 @@ untracked files, modified files, errors — and must catch the eye. Magenta and
 blue are mostly chrome: branch names, task labels. Persistent chrome must never
 be the loudest thing on screen.
 
-**Two different metrics, checked separately.** WCAG contrast measures whether
+**Three different metrics, checked separately.** WCAG contrast measures whether
 text can be *read* (floor 4.5:1). Chroma
-measures whether it *catches the eye*. `audit.py` checks both — a change that
-improves one can silently break the other.
+measures whether it *catches the eye*. `audit.py` checks all three — a change
+that improves one can silently break another.
+
+APCA is the third, because WCAG 2 overstates contrast near black. At matched
+ratios the dark variant read far weaker than the light one: comments at Lc 34
+against 70, body text at 73 against 92. `APCA_FLOOR` gates body text, accents,
+syntax roles and comments beside the WCAG floor, in `build.py`, `audit.py` and
+`editor.audit`. The dark variant sits just above those floors, not well
+clear of them: body text at Lc 76.5, the weakest accent at 54, syntax roles at
+57 to 58.5 with strings at 52. Comments are the exception, at Lc 44.6 in slot 8
+(Neovim, Android Studio, fish autosuggestions) and 46.3 in `muted` (bat): at 39.5
+the dim tier read at half of body strength on dark against three quarters on
+light, for text read all day. Light text on a dark ground blooms, so
+brightness past readability adds glare and no legibility. A version lifted to
+Lc 80.7 body and 61 accents read as too bright on screen, though a render at
+specimen size could not show it. With `CVD_SAFE` on, the syntax floor of 50
+cannot hold: red losing its chroma above about Lc 62 caps the stack, and the
+staggers then need a spread it cannot fit.
+
+**Separation is measured for normal vision.** `model.CVD_SAFE` is off, so
+`worst_separation` measures trichromat distance only, and every accent and role
+sits at one lightness. The dichromat staggers bought separation back at the cost
+of calm: types sank below keywords, and the accents never quite sat level. To
+design for colour-blind viewers again, set `CVD_SAFE = True` and re-solve
+`STAGGER` and `ROLE_STAGGER` with `optimise-stagger.py`, then re-solve
+`intellij.py`'s `FS_TARGET` by hand, which the optimiser does not cover and
+which has fallen to 0.024 to 0.031 for dichromats since the hues and grounds
+moved.
+
+**The dark ground is slate, and chroma is measured against it.** `#161a21`
+sits at chroma 0.015, cool against warm accents, which is the pairing that
+makes the ember and ochre glow: the warm accents and roles sit 7 to 15% further
+from the ground than on a neutral one. The light ground is not slate but
+earth's cream, `#f9f4ee` at chroma 0.010, hue 73, with `nh` at 66. Slate
+`#f3f6fa` gave the light variant only 2 to 9% of glow and read as clinical; the
+cream reads as paper under brown ink. A tinted ground also takes
+chroma from the accents nearest its own hue, and uncompensated slate drained
+blue by 25%. `perceptual.ground_lift` adds the ground's projected chroma back
+to every hued accent and syntax role, so on dark the cool ones stay within 6% of where
+a neutral ground puts them. The lift only adds, so on the cream light ground,
+which sits opposite them, blue lands 17% and cyan 7% further out. Punctuation and comments take no lift: they sit on
+the foreground's hue, next to the ground's own, and a lift would tint them past
+plain text. `member` takes no lift either: it is a steel whisper just under
+plain text, and on slate a lift pushes it toward `function`. On dark the neutral hue `nh` moves to 250, beside the ground's 262,
+so greys, selection, editor surfaces and the Claude Code prompt box are one
+temperature with it. Kept warm,
+they put a brown title bar on a slate window. An umber ground (`#1f1915`) was
+tried first and muted the warm accents instead. The neutral-ground version is
+tagged `umber-neutral` in the dotfiles repo.
+
+**The cool hues lean earthward**: plum at 325 rather than pink at 340, olive at
+130, patina at 185, slate at 250. Blue and cyan were the closest accent pair, and
+fish paints commands and operators with them side by side; moving each 5° apart
+lifts their separation from 0.065 to 0.078 dark and 0.060 to 0.071 light.
+
+**Staggers push toward contrast.** A `STAGGER` offset lightens a slot on the
+dark ground and darkens it on the light one, so each accent keeps the same rank
+in both variants. Applied as a plain Lr offset, it made red the weakest dark
+accent and the strongest light one, and left light cyan at 4.62:1.
 
 ## The knobs
 
@@ -212,33 +332,40 @@ targets are arguments to `build()` in `build.py`.
 | `EMBER` | `model.py` | Hue where chroma peaks, and the cursor/search hue. Currently 48 |
 | `USAGE` | `model.py` | Per-hue loudness weight. Lower = more recessive |
 | `HUES` | `model.py` | Hue angle per ANSI slot |
-| `STAGGER` | `model.py` | Per-hue lightness offset, for colour-vision separation |
+| `STAGGER` | `model.py` | Per-hue lightness offset, for colour-vision separation. Zero while `CVD_SAFE` is off |
+| `CVD_SAFE` | `model.py` | Measure separation for dichromats (True) or normal vision (False) |
 | `ROLE_STAGGER` | `editor.py` | Per-role contrast-target multiplier, the same separation for the editor roles |
-| `SEPARATION_FLOOR` | `model.py` | Minimum dichromat-simulated distance any two meaning-carrying colours may sit at |
+| `SEPARATION_FLOOR` | `model.py` | Minimum distance any two meaning-carrying colours may sit at, for the eyes `CVD_SAFE` names |
+| `APCA_FLOOR` | `model.py` | Perceptual contrast floors (Lc) for body text, accents, syntax roles, comments |
 | `bg_hex` | `build.py` | Ground for each variant |
 | `targets` | `build.py` | Contrast targets the neutral ramp is solved to |
 
 `optimise-stagger.py` re-solves `STAGGER` and `ROLE_STAGGER` if you change the
 chroma model. It reads the same `model.py` and `editor.py`, so it can no longer
-fit a stale copy of either. It searches for maximum worst-case separation across
-deuteranopia, protanopia and tritanopia while keeping each spread small, and
+fit a stale copy of either. With `CVD_SAFE` off it says so and exits, since the
+staggers stay zero. With it on, it searches for maximum worst-case separation
+across deuteranopia, protanopia and tritanopia while keeping each spread small, and
 holds a contrast margin above the floors so separation cannot buy its last
-thousandth by parking a colour on a floor.
+thousandth by parking a colour on a floor. It also rejects role candidates that
+invert salience: an error below a body role or short of its chroma, or `member`
+or `param` above plain text. Unconstrained, it found its best separation
+exactly that way.
 
 ## After any change
 
-Run `audit.py`. It exits non-zero on any floor or salience violation, so it can
+Run `audit.py`. It exits non-zero on any WCAG, APCA or salience violation, so it can
 gate a script. It is the widest check: it alone tests `faint` text, the
 foreground at 0.72 opacity against 0.66 of the floor.
 
-Five emitters gate before writing, each on what it actually emits —
+Six emitters gate before writing, each on what it actually emits —
 `build.py` on the terminal slots, the salience order and accent separation,
 `neovim.py`, `intellij.py`, `xcode.py` and `bat-theme.py` on every syntax role
-(contrast and dichromat separation) via `editor.audit`, `intellij.py` and
-`xcode.py` additionally on their own surface sets. So a violating palette never
-reaches those, but passing one of them is not the same as passing `audit.py`.
-`claude-chrome.py` and `jetbrains-ui.py` consume an already-audited palette and
-do not re-gate.
+(contrast, APCA, salience order and separation) via `editor.audit`, `intellij.py` and
+`xcode.py` additionally on their own surface sets, `delta.py` on the foreground
+against every ground it introduces (both diff washes and all three blame steps).
+So a violating palette never reaches those, but passing one of them is not the
+same as passing `audit.py`. `claude-chrome.py` and `jetbrains-ui.py` consume an
+already-audited palette and do not re-gate.
 
 `adjust-cell-height = 12%` was verified against both JetBrains Mono and Monaspace
 Neon and is correct for either. Monaspace has a 5.7% shorter natural line height

@@ -7,9 +7,9 @@ is what palette.json encodes.
 
 In an editor almost every glyph is coloured, and the high-frequency tokens are
 keywords, functions and types. Reusing the terminal slots paints that scaffold
-in the three most desaturated colours in the palette (blue 0.059, cyan 0.062,
-magenta 0.069) while strings and literals sit at 0.128, so code reads as beige
-with the strings shouting.
+in the three most desaturated colours in the palette (blue, cyan and magenta,
+about 0.06 to 0.07 chroma) while red and yellow run about 0.11 to 0.14, so code
+reads as beige with the strings shouting.
 
 So the hue geometry is inherited, keeping the family resemblance, but chroma is
 re-levelled for editor frequency and punctuation is pushed down below the
@@ -23,9 +23,9 @@ equivalent reintroduced it exactly: the high-frequency roles shipped at a
 worst-case separation of 0.004 (light, tritanopia, function against type) while
 the terminal accents alongside them held 0.035 or better.
 """
-from perceptual import hex_lr, lch, solve, worst_separation
-from palette import contrast, lum
-from model import EMBER, SEPARATION_FLOOR
+from perceptual import ground_lift, hex_lr, lch, solve, worst_separation
+from palette import apca, contrast, lum
+from model import APCA_FLOOR, EMBER, SEPARATION_FLOOR
 
 # Roughly even chroma: no structural role may be muted relative to another.
 # Errors sit higher because they are rare and must interrupt.
@@ -34,28 +34,21 @@ ERROR_C = 0.130
 
 # Lightness stagger, as multipliers on each role's contrast target rather than
 # absolute Lr — for the same reason the targets themselves are contrast-based:
-# the ground differs between variants and a fixed Lr would drift. Solved by
-# optimise-stagger.py against both variants at once. Only the roles that carry
-# a distinct hue appear here; see FAMILY.
-#
-# param was fitted alone, with the other seven held at the values they already
-# had: re-solving all eight together found a nominally better optimum (0.0373)
-# by inverting the salience order — error dimmed below the body roles, member
-# raised above the foreground — which the solver cannot see is wrong. Freezing
-# what already works and solving only what is new is the smaller change and
-# the better one. At 0.922 the binding pair is member/param (deuteranopia,
-# light) at 0.0363.
-ROLE_STAGGER = {"keyword": 1.110, "function": 1.082, "type": 0.827,
-                "string": 0.981, "number": 0.825, "error": 1.169,
-                "member": 0.914, "param": 0.922}
+# the ground differs between variants and a fixed Lr would drift. Only the roles
+# that carry a distinct hue appear here; see FAMILY. All 1.0 while
+# model.CVD_SAFE is off: hue separates the roles for normal vision, and a flat
+# stack is what reads as calm. With it on, re-solve with optimise-stagger.py,
+# whose role solver rejects candidates that invert salience.
+ROLE_STAGGER = {"keyword": 1.0, "function": 1.0, "type": 1.0,
+                "string": 1.0, "number": 1.0, "error": 1.0,
+                "member": 1.0, "param": 1.0}
 
 # Roles that are deliberately the same hue and lightness as another, differing
 # only in chroma. They are family members rather than competing signals, so they
 # follow their head's offset instead of getting one of their own, and they are
 # excluded from the separation gate because they cannot be pulled apart. On the
-# light ground the distinction is thinner than the chroma numbers suggest:
-# type's requested 0.100 gamut-clips to 0.087 against escape's 0.085, so there
-# the pair is effectively one colour. Accepted: escape paints string escapes
+# light ground they are one colour: at the flat stagger both gamut-clip to
+# about C 0.080 and resolve to the same hex. Accepted: escape paints string escapes
 # and regex metacharacters, which occur inside literals where context already
 # separates them from type names.
 FAMILY = {"constant": "number", "escape": "type"}
@@ -76,8 +69,8 @@ def syntax(V, stagger=None):
 
     # Contrast targets, not lightness targets: the ground differs between
     # variants, and a fixed Lr would drift.
-    body = 7.6 if dark else 6.2
-    quiet = 6.4 if dark else 5.2
+    body = 7.8 if dark else 6.2
+    quiet = 7.0 if dark else 5.2
     fg_h = lch(V["foreground"])[2]
 
     # role -> (contrast target, hue, chroma). One table so the stagger applies
@@ -90,26 +83,56 @@ def syntax(V, stagger=None):
         "number":   (body, hue["yellow"], SYNTAX_C),
         "constant": (body, hue["yellow"], SYNTAX_C * 1.15),
         "escape":   (body, hue["cyan"], SYNTAX_C * 0.85),
-        "error":    (body, hue["red"], ERROR_C),
-        # Instance variables and properties. Green, on the content side of the
-        # taxonomy the editor accents use: warm is content (strings green,
-        # literals yellow, errors red), cool is structure (keywords magenta,
-        # functions blue, types cyan). The old whisper cyan at C 0.045 measured
-        # 0.032 from param and 0.035 from keyword under simulated deficiency on
-        # the dark ground — at or under the floor — because cyan is boxed in
-        # between function, keyword and the plain foreground. Full chroma
-        # because it is a real role carrying real tokens (ivars, properties,
-        # instance fields), not a whisper, and it is separated from string —
-        # the other green — by the lightness step the stagger provides.
-        "member":   (9.2 if dark else 8.0, hue["green"], SYNTAX_C),
+        # A step above the body roles: errors interrupt. salience() holds it.
+        "error":    (body * 1.03, hue["red"], ERROR_C),
+        # Instance variables and properties: a steel whisper just under plain
+        # text. At full-chroma green it shared string's hue and chroma, apart
+        # only by the lightness step the stagger once provided, which is gone
+        # while CVD_SAFE is off. On the foreground's hue it failed separation
+        # from param on the warm light ground (0.023), which sits beside
+        # param's hue.
+        "member":   (9.2 if dark else 8.0, hue["blue"], 0.045),
         "param":    (9.6 if dark else 8.6, hue["yellow"], 0.030),
         # Punctuation separates identifiers; it should not compete with them.
-        # Below the foreground, above the comments.
-        "punct":    (6.2 if dark else 5.4, fg_h, 0.012),
-        "muted":    (5.0 if dark else 4.8, fg_h, 0.014),
+        # Below every hued role, above the comments; audit() holds the order,
+        # because ROLE_STAGGER moves the roles and once pushed type and number
+        # under a fixed punct target.
+        "punct":    (6.5 if dark else 4.95, fg_h, 0.012),
+        "muted":    (6.2 if dark else 4.8, fg_h, 0.014),
     }
-    return {role: solve(target * st.get(FAMILY.get(role, role), 1.0), bg, C, h)
+    # punct and muted are near-neutrals on the foreground's hue, which sits next
+    # to a tinted ground's own, so a lift would tint them past plain text. member
+    # is a whisper too, and a lift on slate would push it toward function.
+    return {role: solve(target * st.get(FAMILY.get(role, role), 1.0), bg,
+                        C + (0.0 if role in ("punct", "muted", "member") else ground_lift(bg, h)), h)
             for role, (target, h, C) in spec.items()}
+
+
+def salience(S, V):
+    """The ordering separation cannot see, as a list of violations.
+
+    An error out-contrasts every body role and keeps its chroma, neither member
+    nor param rises to plain text, and comments sit under punctuation, which
+    sits under every hued role. audit() gates on it and the role
+    solver rejects candidates by it, from this one definition, because the two
+    used to carry separate copies and disagreed about the shipped values.
+    """
+    bg = V["background"]
+    c = {r: contrast(S[r], bg) for r in S}
+    bad = []
+    if c["error"] < max(c[r] for r in ("keyword", "function", "type", "string", "number")):
+        bad.append(("error below a body role", round(c["error"], 2)))
+    if lch(S["error"])[1] < ERROR_C * 0.9:
+        bad.append(("error chroma", round(lch(S["error"])[1], 3)))
+    if max(c["member"], c["param"]) >= contrast(V["foreground"], bg):
+        bad.append(("member/param above plain text", round(max(c["member"], c["param"]), 2)))
+    if not c["muted"] < c["punct"] < min(c[k] for k in ROLE_STAGGER):
+        bad.append(("order muted < punct < roles", round(c["punct"], 2)))
+    # Neovim and Android Studio paint comments with slot 8, not muted, so it
+    # has to sit under punctuation too.
+    if contrast(V["8"], bg) >= c["punct"]:
+        bad.append(("comments (slot 8) above punct", round(contrast(V["8"], bg), 2)))
+    return bad
 
 
 def separation(S, foreground=None):
@@ -129,7 +152,7 @@ def separation(S, foreground=None):
 
 def audit(V, S, floor=4.5):
     """Every syntax role must clear the readable floor on its own ground, and
-    the distinct-hue roles must stay apart under colour-vision deficiency.
+    the distinct-hue roles must stay apart for the eyes model.CVD_SAFE names.
 
     Surfaces are audited by each emitter; this covers the accents, which
     otherwise ship unchecked. Contrast alone was checked here while the roles
@@ -139,6 +162,11 @@ def audit(V, S, floor=4.5):
     bg = V["background"]
     bad = [(k, round(contrast(v, bg), 2)) for k, v in S.items()
            if contrast(v, bg) < floor]
+    bad += [(f"{k} Lc", round(apca(S[k], bg), 1)) for k in (*ROLE_STAGGER, *FAMILY)
+            if apca(S[k], bg) < APCA_FLOOR["syntax"]]
+    if apca(S["muted"], bg) < APCA_FLOOR["comment"]:
+        bad.append(("muted Lc", round(apca(S["muted"], bg), 1)))
+    bad += salience(S, V)
     dE, pair = separation(S, V["foreground"])
     if dE < SEPARATION_FLOOR:
         bad.append((f"separation {pair[0]}/{pair[1]} {pair[2]}", round(dE, 4)))
@@ -148,7 +176,16 @@ def audit(V, S, floor=4.5):
 def surfaces(V):
     """The near-background ramp every editor needs: current line, panels, diff
     washes, search. Derived here rather than per emitter, so a wash tuned once
-    cannot drift between Neovim, Android Studio and Xcode."""
+    cannot drift between Neovim, Android Studio and Xcode.
+
+    add, delete and change carry nothing for a dichromat and cannot be made to.
+    At the low chroma a wash has to live at, the red/green pair measured a
+    deuteranopic separation of 0.008 dark and 0.011 light on the original
+    palette, against SEPARATION_FLOOR's 0.035, and rotating the hues far enough
+    to clear that fails tritanopia instead. Every consumer therefore owes these three a second
+    channel that is not colour: red/green line numbers in delta, gitsigns in
+    Neovim's sign column. Only the surfaces are safe to use unaccompanied.
+    """
     bg = V["background"]
     dark = lum(bg) < 0.18
     bglr, nh = lch(bg)[0], lch(V["foreground"])[2]
