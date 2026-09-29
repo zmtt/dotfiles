@@ -270,8 +270,10 @@ against 70, body text at 73 against 92. `APCA_FLOOR` gates body text, accents,
 syntax roles and comments beside the WCAG floor, in `build.py`, `audit.py` and
 `editor.audit`. The dark variant sits just above those floors, not well
 clear of them: body text at Lc 76.5, the weakest accent at 54, syntax roles at
-57 to 58.5 with strings at 52, comments at 39.5 in slot 8 (Neovim, Android Studio) and
-41.7 in `muted` (bat). Light text on a dark ground blooms, so
+57 to 58.5 with strings at 52. Comments are the exception, at Lc 44.6 in slot 8
+(Neovim, Android Studio, fish autosuggestions) and 46.3 in `muted` (bat): at 39.5
+the dim tier read at half of body strength on dark against three quarters on
+light, for text read all day. Light text on a dark ground blooms, so
 brightness past readability adds glare and no legibility. A version lifted to
 Lc 80.7 body and 61 accents read as too bright on screen, though a render at
 specimen size could not show it. With `CVD_SAFE` on, the syntax floor of 50
@@ -288,24 +290,31 @@ design for colour-blind viewers again, set `CVD_SAFE = True` and re-solve
 which has fallen to 0.024 to 0.031 for dichromats since the hues and grounds
 moved.
 
-**The grounds are slate, and chroma is measured against them.** `#161a21` and
-`#f3f6fa` sit at chroma 0.015 and 0.006, cool against warm accents, which is the
-pairing that makes the ember and ochre glow: the warm accents and roles sit 7
-to 15% further from the ground than on a neutral one on dark, 2 to 9% on light. A tinted ground also takes
+**The dark ground is slate, and chroma is measured against it.** `#161a21`
+sits at chroma 0.015, cool against warm accents, which is the pairing that
+makes the ember and ochre glow: the warm accents and roles sit 7 to 15% further
+from the ground than on a neutral one. The light ground is not slate but
+earth's cream, `#f9f4ee` at chroma 0.010, hue 73, with `nh` at 66. Slate
+`#f3f6fa` gave the light variant only 2 to 9% of glow and read as clinical; the
+cream reads as paper under brown ink. A tinted ground also takes
 chroma from the accents nearest its own hue, and uncompensated slate drained
 blue by 29%. `perceptual.ground_lift` adds the ground's projected chroma back
-to every hued accent and syntax role, so the cool ones stay within 6% of where
-a neutral ground puts them. Punctuation and comments take no lift: they sit on
+to every hued accent and syntax role, so on dark the cool ones stay within 6% of where
+a neutral ground puts them. The lift only adds, so on the cream light ground,
+which sits opposite them, blue lands 17% and cyan 7% further out. Punctuation and comments take no lift: they sit on
 the foreground's hue, next to the ground's own, and a lift would tint them past
-plain text. The neutral hue `nh` moves to 250, beside the grounds' 262 and 255,
+plain text. `member` takes no lift either: it is a steel whisper just under
+plain text, and on slate a lift pushes it toward `function`. On dark the neutral hue `nh` moves to 250, beside the ground's 262,
 so greys, selection, editor surfaces and the Claude Code prompt box are one
-temperature with them. Kept warm,
+temperature with it. Kept warm,
 they put a brown title bar on a slate window. An umber ground (`#1f1915`) was
 tried first and muted the warm accents instead. The neutral-ground version is
 tagged `umber-neutral` in the dotfiles repo.
 
 **The cool hues lean earthward**: plum at 325 rather than pink at 340, olive at
-130, patina at 190, slate at 245.
+130, patina at 185, slate at 250. Blue and cyan were the closest accent pair, and
+fish paints commands and operators with them side by side; moving each 5° apart
+lifts their separation from 0.065 to 0.078 dark and 0.060 to 0.071 light.
 
 **Staggers push toward contrast.** A `STAGGER` offset lightens a slot on the
 dark ground and darkens it on the light one, so each accent keeps the same rank

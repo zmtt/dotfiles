@@ -17,10 +17,10 @@ EMBER = 48.0
 # How loud each hue is allowed to be, on top of warmth. Red and yellow are
 # semantic — untracked files, modified files, errors — and must catch the eye.
 # Magenta and blue are mostly chrome: branch names, task labels.
-USAGE = {33.0: 1.00, 72.0: 1.00, 130.0: 0.88, 190.0: 0.80, 245.0: 0.78, 325.0: 0.62}
+USAGE = {33.0: 1.00, 72.0: 1.00, 130.0: 0.88, 185.0: 0.80, 250.0: 0.78, 325.0: 0.62}
 
 HUES = {"red": 33.0, "green": 130.0, "yellow": 72.0,
-        "blue": 245.0, "magenta": 325.0, "cyan": 190.0}
+        "blue": 250.0, "magenta": 325.0, "cyan": 185.0}
 
 # Uniform lightness keeps the palette calm, and with CVD_SAFE off hue alone
 # holds the accents apart, so every offset is zero. Uniform lightness is also

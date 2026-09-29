@@ -3,26 +3,26 @@
 # palette has a centre of gravity; chroma is further weighted by how each slot
 # is actually used, so persistent chrome never outshouts semantic colour.
 
-background = #f3f6fa
-foreground = #303842
+background = #f9f4ee
+foreground = #3f352d
 cursor-color = #a74900
-cursor-text = #f3f6fa
-selection-background = #ccddee
-selection-foreground = #303842
+cursor-text = #f9f4ee
+selection-background = #e9d7c6
+selection-foreground = #3f352d
 
-palette = 0=#232d36
-palette = 1=#a23f2c
-palette = 2=#506e2e
+palette = 0=#32291f
+palette = 1=#a53c27
+palette = 2=#4f6f2a
 palette = 3=#885700
-palette = 4=#416788
-palette = 5=#78557a
-palette = 6=#2a706c
-palette = 7=#c3cdd7
-palette = 8=#66707a
-palette = 9=#882c1b
-palette = 10=#3e5a1d
+palette = 4=#476686
+palette = 5=#775679
+palette = 6=#2d7068
+palette = 7=#d3c9bf
+palette = 8=#776c63
+palette = 9=#8b2916
+palette = 10=#3d5a18
 palette = 11=#6e4600
-palette = 12=#2f5371
-palette = 13=#634364
-palette = 14=#165b58
-palette = 15=#e1e7ed
+palette = 12=#36526f
+palette = 13=#624364
+palette = 14=#1a5b54
+palette = 15=#ebe4de

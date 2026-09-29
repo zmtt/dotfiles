@@ -39,10 +39,10 @@ def build(bg_hex, nh, acc_L, br_L, cscale, br_cscale, targets, sel_L, cur_L):
 
 DARK, dn = build(nh=250, acc_L=ACC_L["dark"], br_L=0.820,
     cscale=CSCALE["dark"], br_cscale=0.92, sel_L=0.310, cur_L=0.750, bg_hex="#161a21",
-    targets={"fg":11.2, "s0":1.55, "s8":5.2, "s7":9.8, "s15":14.0})
+    targets={"fg":11.2, "s0":1.55, "s8":5.9, "s7":9.8, "s15":14.0})
 
-LIGHT, ln = build(nh=250, acc_L=ACC_L["light"], br_L=0.430,
-    cscale=CSCALE["light"], br_cscale=1.0, sel_L=0.890, cur_L=0.520, bg_hex="#f3f6fa",
+LIGHT, ln = build(nh=66, acc_L=ACC_L["light"], br_L=0.430,
+    cscale=CSCALE["light"], br_cscale=1.0, sel_L=0.890, cur_L=0.520, bg_hex="#f9f4ee",
     targets={"fg":10.9, "s0":13.0, "s8":4.65, "s7":1.70, "s15":1.12})
 
 NAMES = {1:"red",2:"green",3:"yellow",4:"blue",5:"magenta",6:"cyan"}
