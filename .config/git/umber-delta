@@ -1,0 +1,23 @@
+#!/bin/sh
+# delta, with the Umber variant resolved per invocation.
+#
+# delta detects a dark or light terminal on its own (--detect-dark-light), but
+# detection only flips its built-in defaults: it cannot activate a named feature
+# or select a custom syntax-theme, which is where Umber's per-variant half
+# lives. The variant therefore has to be chosen before delta starts.
+#
+# Resolving here rather than exporting from the shell keeps it per-invocation.
+# Ghostty swaps its palette the moment the appearance flips, so a value resolved
+# once per shell paints dark washes onto a light terminal for the rest of that
+# session, and reaches git hooks and editor subprocesses not at all.
+#
+# AppleInterfaceStyle is absent in light mode rather than set to "Light", so the
+# substitution must be quoted: unquoted it collapses the empty case to `= Dark`
+# and test fails on the argument count.
+if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ]; then
+    DELTA_FEATURES=umber-dark
+else
+    DELTA_FEATURES=umber-light
+fi
+export DELTA_FEATURES
+exec delta "$@"

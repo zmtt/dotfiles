@@ -3,7 +3,3 @@
 
 # The identity includes live in ~/.gitconfig, which git reads AFTER this file. Keeping them here
 # meant a bare [user] block in ~/.gitconfig won on precedence and replaced the work email.
-
-[delta]
-	syntax-theme = Umber
-	line-numbers = true

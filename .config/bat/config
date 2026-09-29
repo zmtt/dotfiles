@@ -1,2 +1,8 @@
---theme="Umber"
+# auto:system reads the macOS appearance per invocation, so bat follows the
+# same switch Ghostty does. delta cannot: its own detection only picks between
+# built-in defaults and cannot reach a named feature or a custom syntax-theme,
+# so ~/.config/git/umber-delta resolves the appearance and sets DELTA_FEATURES.
+--theme=auto:system
+--theme-dark="Umber"
+--theme-light="Umber Light"
 --style=plain
