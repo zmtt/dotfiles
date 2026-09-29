@@ -29,7 +29,7 @@ window-padding-balance = true
 # Cursor
 cursor-style = block
 cursor-style-blink = true
-shell-integration-features = no-cursor,no-sudo,title
+shell-integration-features = no-cursor,no-sudo,title,ssh-terminfo,ssh-env
 
 # Window Size
 window-width = 100
