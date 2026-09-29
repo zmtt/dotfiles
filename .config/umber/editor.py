@@ -7,9 +7,9 @@ is what palette.json encodes.
 
 In an editor almost every glyph is coloured, and the high-frequency tokens are
 keywords, functions and types. Reusing the terminal slots paints that scaffold
-in the three most desaturated colours in the palette (blue 0.059, cyan 0.062,
-magenta 0.069) while strings and literals sit at 0.128, so code reads as beige
-with the strings shouting.
+in the three most desaturated colours in the palette (blue, cyan and magenta,
+about 0.06 to 0.07 chroma) while red and yellow run about 0.11 to 0.14, so code
+reads as beige with the strings shouting.
 
 So the hue geometry is inherited, keeping the family resemblance, but chroma is
 re-levelled for editor frequency and punctuation is pushed down below the
@@ -114,8 +114,9 @@ def syntax(V, stagger=None):
 def salience(S, V):
     """The ordering separation cannot see, as a list of violations.
 
-    An error out-contrasts every body role and keeps its chroma, and neither
-    member nor param rises to plain text. audit() gates on it and the role
+    An error out-contrasts every body role and keeps its chroma, neither member
+    nor param rises to plain text, and comments sit under punctuation, which
+    sits under every hued role. audit() gates on it and the role
     solver rejects candidates by it, from this one definition, because the two
     used to carry separate copies and disagreed about the shipped values.
     """
@@ -128,6 +129,12 @@ def salience(S, V):
         bad.append(("error chroma", round(lch(S["error"])[1], 3)))
     if max(c["member"], c["param"]) >= contrast(V["foreground"], bg):
         bad.append(("member/param above plain text", round(max(c["member"], c["param"]), 2)))
+    if not c["muted"] < c["punct"] < min(c[k] for k in ROLE_STAGGER):
+        bad.append(("order muted < punct < roles", round(c["punct"], 2)))
+    # Neovim and Android Studio paint comments with slot 8, not muted, so it
+    # has to sit under punctuation too.
+    if contrast(V["8"], bg) >= c["punct"]:
+        bad.append(("comments (slot 8) above punct", round(contrast(V["8"], bg), 2)))
     return bad
 
 
@@ -148,7 +155,7 @@ def separation(S, foreground=None):
 
 def audit(V, S, floor=4.5):
     """Every syntax role must clear the readable floor on its own ground, and
-    the distinct-hue roles must stay apart under colour-vision deficiency.
+    the distinct-hue roles must stay apart for the eyes model.CVD_SAFE names.
 
     Surfaces are audited by each emitter; this covers the accents, which
     otherwise ship unchecked. Contrast alone was checked here while the roles
@@ -162,13 +169,6 @@ def audit(V, S, floor=4.5):
             if apca(S[k], bg) < APCA_FLOOR["syntax"]]
     if apca(S["muted"], bg) < APCA_FLOOR["comment"]:
         bad.append(("muted Lc", round(apca(S["muted"], bg), 1)))
-    c = {k: contrast(v, bg) for k, v in S.items()}
-    if not c["muted"] < c["punct"] < min(c[k] for k in ROLE_STAGGER):
-        bad.append(("order muted < punct < roles", round(c["punct"], 2)))
-    # Neovim and Android Studio paint comments with slot 8, not muted, so it
-    # has to sit under punctuation too.
-    if contrast(V["8"], bg) >= c["punct"]:
-        bad.append(("comments (slot 8) above punct", round(contrast(V["8"], bg), 2)))
     bad += salience(S, V)
     dE, pair = separation(S, V["foreground"])
     if dE < SEPARATION_FLOOR:
@@ -182,10 +182,10 @@ def surfaces(V):
     cannot drift between Neovim, Android Studio and Xcode.
 
     add, delete and change carry nothing for a dichromat and cannot be made to.
-    At the chroma a wash has to live at, 0.028 to 0.030, the red/green pair
-    measures a deuteranopic separation of 0.008 dark and 0.011 light against
-    SEPARATION_FLOOR's 0.035, and rotating the hues far enough to clear that
-    fails tritanopia instead. Every consumer therefore owes these three a second
+    At the low chroma a wash has to live at, the red/green pair measured a
+    deuteranopic separation of 0.008 dark and 0.011 light on the original
+    palette, against SEPARATION_FLOOR's 0.035, and rotating the hues far enough
+    to clear that fails tritanopia instead. Every consumer therefore owes these three a second
     channel that is not colour: red/green line numbers in delta, gitsigns in
     Neovim's sign column. Only the surfaces are safe to use unaccompanied.
     """
