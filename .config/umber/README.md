@@ -64,7 +64,8 @@ These are **source**, edit directly:
 ```
 python3 check.py          # classification, runs, idempotency, formats, modes,
                           # cross-emitter agreement, artefact-vs-git drift
-python3 check.py --slow   # also runs the sampling optimiser
+python3 check.py --slow   # also runs the sampling optimiser, a no-op
+                          # while model.CVD_SAFE is off
 ```
 
 Its MANIFEST must classify every `.py` here, and it fails if one is missing —
@@ -148,15 +149,18 @@ comment:
   entirely rather than merely gain a per-variant sibling.
 - `BAT_THEME` only reaches delta when `syntax-theme` is unset, so it is no way
   around the above.
-- **The washes are not the dichromat's channel**, `line-numbers` is. At the
-  chroma a wash sits at, the `+`/`-` pair measures a deuteranopic separation of
+- **The washes are not the dichromat's channel**, `line-numbers` is. On the
+  original palette the `+`/`-` washes measured a deuteranopic separation of
   0.008 dark and 0.011 light against a floor of 0.035, and no hue rotation
-  clears that without failing tritanopia instead. The red/green gutter numbers
-  measure 0.046 and 0.045, so turning `line-numbers` off would quietly drop the
-  diff below the floor the rest of the palette is held to.
+  clears that without failing tritanopia instead, while the red/green gutter
+  numbers measured 0.046 and 0.045. With `CVD_SAFE` off and the staggers flat
+  the gutter no longer clears it either (about 0.013 to 0.015). For normal
+  vision both channels separate: the washes at about 0.043 to 0.046, the
+  gutter at about 0.17. `delta.py` still refuses to build with
+  `line-numbers` off.
 
 The washes are `editor.surfaces()`'s `add` and `delete`, the same two Neovim and
-Android Studio already paint diffs with, at chroma 0.027–0.031 against a ground
+Android Studio already paint diffs with, at chroma 0.024–0.031 against a ground
 they clear at better than 9:1. Dropping the wash entirely was tried first: with
 `keep-plus-minus-markers = false` a removed line and an added line then render
 identically in the body, and the only thing separating them is a four-character
@@ -228,14 +232,17 @@ In a terminal, colour marks the exceptional, so warm hues carry chroma and cool
 hues recede as chrome. In an editor nearly every glyph is coloured and the
 high-frequency tokens are keywords, functions and types. Reusing the terminal
 slots paints that scaffold in the three most desaturated colours in the palette
-(blue 0.059, cyan 0.062, magenta 0.069) while strings and literals sit at 0.128
-— code reads as beige with the strings shouting.
+(blue, cyan and magenta, about 0.06 to 0.07 chroma) while red and yellow run
+about 0.11 to 0.14 — code reads as beige with the strings shouting.
 
 So editors inherit the hue geometry, keeping the family resemblance, but chroma
-is re-levelled: keywords, functions, types, strings and numbers land within 0.001
-of each other, against a 0.070 spread across the terminal slots they replace.
-Roles that should not compete stay outside that band — punctuation 0.013 and
-comments 0.014 below the identifiers they separate, errors 0.130 above. `render-code.py` renders a before/after specimen.
+is re-levelled: keywords, functions, types, strings and numbers all ask for the
+same chroma, 0.100. On dark they land at 0.100 to 0.115, the spread coming from
+`ground_lift`. On light, type gamut-clips to about 0.08 while the rest hold
+0.10 to 0.107, since a cyan that dark cannot carry more in sRGB. The terminal
+slots they replace spread about 0.06 to 0.08. Roles that should not compete stay
+outside that band — punctuation about 0.012 and comments about 0.014 below the
+identifiers they separate, errors about 0.13 above. `render-code.py` renders a before/after specimen.
 
 ## Design rules the generator enforces
 
@@ -254,16 +261,17 @@ be the loudest thing on screen.
 
 **Three different metrics, checked separately.** WCAG contrast measures whether
 text can be *read* (floor 4.5:1). Chroma
-measures whether it *catches the eye*. `audit.py` checks both — a change that
-improves one can silently break the other.
+measures whether it *catches the eye*. `audit.py` checks all three — a change
+that improves one can silently break another.
 
 APCA is the third, because WCAG 2 overstates contrast near black. At matched
 ratios the dark variant read far weaker than the light one: comments at Lc 34
 against 70, body text at 73 against 92. `APCA_FLOOR` gates body text, accents,
-syntax roles and comments beside the WCAG floor, in `build.py` and
+syntax roles and comments beside the WCAG floor, in `build.py`, `audit.py` and
 `editor.audit`. The dark variant sits just above those floors, not well
 clear of them: body text at Lc 76.5, the weakest accent at 54, syntax roles at
-57 with strings at 52, comments at 39.5. Light text on a dark ground blooms, so
+57 to 58.5 with strings at 52, comments at 39.5 in slot 8 (Neovim, Android Studio) and
+41.7 in `muted` (bat). Light text on a dark ground blooms, so
 brightness past readability adds glare and no legibility. A version lifted to
 Lc 80.7 body and 61 accents read as too bright on screen, though a render at
 specimen size could not show it. With `CVD_SAFE` on, the syntax floor of 50
@@ -275,7 +283,10 @@ staggers then need a spread it cannot fit.
 sits at one lightness. The dichromat staggers bought separation back at the cost
 of calm: types sank below keywords, and the accents never quite sat level. To
 design for colour-blind viewers again, set `CVD_SAFE = True` and re-solve
-`STAGGER` and `ROLE_STAGGER` with `optimise-stagger.py`.
+`STAGGER` and `ROLE_STAGGER` with `optimise-stagger.py`, then re-solve
+`intellij.py`'s `FS_TARGET` by hand, which the optimiser does not cover and
+which has fallen to 0.024 to 0.031 for dichromats since the hues and grounds
+moved.
 
 **The grounds are slate, and chroma is measured against them.** `#161a21` and
 `#f3f6fa` sit at chroma 0.015 and 0.006, cool against warm accents, which is the
@@ -322,8 +333,9 @@ targets are arguments to `build()` in `build.py`.
 
 `optimise-stagger.py` re-solves `STAGGER` and `ROLE_STAGGER` if you change the
 chroma model. It reads the same `model.py` and `editor.py`, so it can no longer
-fit a stale copy of either. It searches for maximum worst-case separation across
-deuteranopia, protanopia and tritanopia while keeping each spread small, and
+fit a stale copy of either. With `CVD_SAFE` off it says so and exits, since the
+staggers stay zero. With it on, it searches for maximum worst-case separation
+across deuteranopia, protanopia and tritanopia while keeping each spread small, and
 holds a contrast margin above the floors so separation cannot buy its last
 thousandth by parking a colour on a floor. It also rejects role candidates that
 invert salience: an error below a body role or short of its chroma, or `member`
@@ -332,14 +344,14 @@ exactly that way.
 
 ## After any change
 
-Run `audit.py`. It exits non-zero on any floor or salience violation, so it can
+Run `audit.py`. It exits non-zero on any WCAG, APCA or salience violation, so it can
 gate a script. It is the widest check: it alone tests `faint` text, the
 foreground at 0.72 opacity against 0.66 of the floor.
 
 Six emitters gate before writing, each on what it actually emits —
 `build.py` on the terminal slots, the salience order and accent separation,
 `neovim.py`, `intellij.py`, `xcode.py` and `bat-theme.py` on every syntax role
-(contrast and dichromat separation) via `editor.audit`, `intellij.py` and
+(contrast, APCA, salience order and separation) via `editor.audit`, `intellij.py` and
 `xcode.py` additionally on their own surface sets, `delta.py` on the foreground
 against every ground it introduces (both diff washes and all three blame steps).
 So a violating palette never reaches those, but passing one of them is not the
