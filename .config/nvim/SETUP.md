@@ -15,21 +15,19 @@
 ### Manual Tool Installs (not in Mason)
 
 ```bash
-brew install ktlint
 brew install --cask kotlin-lsp
 ```
 
-- **Xcode Command Line Tools** - for sourcekit-lsp (Swift support)
 - Swift formatting uses the toolchain's own `swift format` (Swift 6+), no separate install
 
 ### Auto-Installed via Mason
 
 Declared in `lua/plugins/mason.lua`, installed automatically on first launch:
 
-- LSP servers: `lua-language-server`, `pyright`, `ruff`, `typescript-language-server`, `bash-language-server`, `marksman`, `yaml-language-server` (kotlin-lsp comes from brew)
+- LSP servers: `lua-language-server`, `pyright`, `ruff`, `bash-language-server`, `marksman` (kotlin-lsp comes from brew)
 - Formatters: `stylua`, `prettierd`, `shfmt`
 
-Swift's `sourcekit-lsp` comes from Xcode (`xcrun`), not Mason. Python formatting and import sorting are handled by `ruff` via conform.nvim.
+Python formatting and import sorting are handled by `ruff` via conform.nvim.
 
 ## Replicating on Another Mac
 
@@ -42,7 +40,7 @@ Swift's `sourcekit-lsp` comes from Xcode (`xcrun`), not Mason. Python formatting
 # Install dependencies
 brew install neovim git ripgrep fd
 
-# Ensure Xcode CLI tools (for C compiler + sourcekit-lsp)
+# Ensure Xcode CLI tools (for C compiler)
 xcode-select --install
 ```
 
