@@ -11,7 +11,6 @@ vim.o.relativenumber = true
 vim.opt.clipboard = "unnamedplus"
 
 -- Better UI defaults
-vim.opt.termguicolors = true
 vim.opt.signcolumn = "yes"
 vim.opt.updatetime = 250
 vim.opt.cursorline = true
@@ -19,6 +18,7 @@ vim.opt.scrolloff = 8
 vim.opt.sidescrolloff = 8
 vim.opt.numberwidth = 4
 vim.opt.showmode = false
+vim.o.winborder = "rounded"
 
 -- Indentation settings: 4 spaces
 vim.o.tabstop = 4 -- Number of spaces a tab counts for
@@ -43,13 +43,8 @@ vim.g.loaded_ruby_provider = 0
 
 -- Diagnostics display
 vim.diagnostic.config({
-	virtual_text = false,
-	signs = true,
-	underline = true,
-	update_in_insert = false,
 	severity_sort = true,
 	float = {
-		border = "rounded",
 		source = "if_many",
 	},
 })
