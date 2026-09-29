@@ -261,11 +261,23 @@ APCA is the third, because WCAG 2 overstates contrast near black. At matched
 ratios the dark variant read far weaker than the light one: comments at Lc 34
 against 70, body text at 73 against 92. `APCA_FLOOR` gates body text, accents,
 syntax roles and comments beside the WCAG floor, in `build.py` and
-`editor.audit`. The syntax floor sits at APCA's large-text level, not its
-content level, and cannot rise: red loses its chroma above about Lc 62 on the
-dark ground, errors must stay the most prominent role, and compressing the
-stack under that ceiling drops separation below `SEPARATION_FLOOR`. The shipped
-roles are on that frontier.
+`editor.audit`. Every syntax role clears APCA's content level (Lc 60) on the
+dark ground except strings, the deliberately quieter tier, which is why the
+syntax floor is 50. That only holds with `CVD_SAFE` off. With it on, red losing
+its chroma above about Lc 62 caps the stack, and the staggers then need a
+spread it cannot fit.
+
+**Separation is measured for normal vision.** `model.CVD_SAFE` is off, so
+`worst_separation` measures trichromat distance only, and every accent and role
+sits at one lightness. The dichromat staggers bought separation back at the cost
+of calm: types sank below keywords, and the accents never quite sat level. To
+design for colour-blind viewers again, set `CVD_SAFE = True` and re-solve
+`STAGGER` and `ROLE_STAGGER` with `optimise-stagger.py`.
+
+**The grounds are umber, not grey.** `#1f1915` and `#f9f4ee` carry chroma 0.012
+and 0.010 at warm hues (56 and 73), against 0.004 and 0.003 before, so the accents sit in an earth tone instead of on black
+or white. The cool hues lean earthward to match: plum at 325 rather than pink at
+340, olive at 130, patina at 190, slate at 245.
 
 **Staggers push toward contrast.** A `STAGGER` offset lightens a slot on the
 dark ground and darkens it on the light one, so each accent keeps the same rank
@@ -283,7 +295,8 @@ targets are arguments to `build()` in `build.py`.
 | `EMBER` | `model.py` | Hue where chroma peaks, and the cursor/search hue. Currently 48 |
 | `USAGE` | `model.py` | Per-hue loudness weight. Lower = more recessive |
 | `HUES` | `model.py` | Hue angle per ANSI slot |
-| `STAGGER` | `model.py` | Per-hue lightness offset, for colour-vision separation |
+| `STAGGER` | `model.py` | Per-hue lightness offset, for colour-vision separation. Zero while `CVD_SAFE` is off |
+| `CVD_SAFE` | `model.py` | Measure separation for dichromats (True) or normal vision (False) |
 | `ROLE_STAGGER` | `editor.py` | Per-role contrast-target multiplier, the same separation for the editor roles |
 | `SEPARATION_FLOOR` | `model.py` | Minimum dichromat-simulated distance any two meaning-carrying colours may sit at |
 | `APCA_FLOOR` | `model.py` | Perceptual contrast floors (Lc) for body text, accents, syntax roles, comments |

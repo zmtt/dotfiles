@@ -34,20 +34,14 @@ ERROR_C = 0.130
 
 # Lightness stagger, as multipliers on each role's contrast target rather than
 # absolute Lr — for the same reason the targets themselves are contrast-based:
-# the ground differs between variants and a fixed Lr would drift. Solved by
-# optimise-stagger.py against both variants at once. Only the roles that carry
-# a distinct hue appear here; see FAMILY.
-#
-# param was fitted alone, with the other seven held at the values they already
-# had: re-solving all eight together found a nominally better optimum (0.0373)
-# by inverting the salience order — error dimmed below the body roles, member
-# raised above the foreground — which the solver cannot see is wrong. Freezing
-# what already works and solving only what is new is the smaller change and
-# the better one. At 0.922 the binding pair is member/param (deuteranopia,
-# light) at 0.0363.
-ROLE_STAGGER = {"keyword": 1.110, "function": 1.082, "type": 0.827,
-                "string": 0.981, "number": 0.825, "error": 1.169,
-                "member": 0.914, "param": 0.922}
+# the ground differs between variants and a fixed Lr would drift. Only the roles
+# that carry a distinct hue appear here; see FAMILY. All 1.0 while
+# model.CVD_SAFE is off: hue separates the roles for normal vision, and a flat
+# stack is what reads as calm. With it on, re-solve with optimise-stagger.py,
+# whose role solver rejects candidates that invert salience.
+ROLE_STAGGER = {"keyword": 1.0, "function": 1.0, "type": 1.0,
+                "string": 1.0, "number": 1.0, "error": 1.0,
+                "member": 1.0, "param": 1.0}
 
 # Roles that are deliberately the same hue and lightness as another, differing
 # only in chroma. They are family members rather than competing signals, so they
@@ -76,8 +70,8 @@ def syntax(V, stagger=None):
 
     # Contrast targets, not lightness targets: the ground differs between
     # variants, and a fixed Lr would drift.
-    body = 7.6 if dark else 6.2
-    quiet = 6.4 if dark else 5.2
+    body = 8.4 if dark else 6.2
+    quiet = 7.2 if dark else 5.2
     fg_h = lch(V["foreground"])[2]
 
     # role -> (contrast target, hue, chroma). One table so the stagger applies

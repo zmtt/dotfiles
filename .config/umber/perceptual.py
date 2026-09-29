@@ -4,6 +4,7 @@ import math
 import os
 import tempfile
 from palette import oklch_to_srgb, in_gamut, encode, lum, contrast
+from model import CVD_SAFE
 
 # ---- OKLr: Ottosson's toe correction. Plain Oklab L is not perceptually
 # uniform in the darks; Lr fixes that, which matters a lot for a dark theme.
@@ -127,10 +128,11 @@ def delta_e(hx1, hx2, kind=None):
     return math.dist(a, b)
 
 
-CVD_KINDS = tuple(CVD)
+# None is normal vision; see model.CVD_SAFE.
+VISION_KINDS = tuple(CVD) if CVD_SAFE else (None,)
 
 
-def worst_separation(colours, kinds=CVD_KINDS):
+def worst_separation(colours, kinds=VISION_KINDS):
     """Closest pair among `colours`, across every simulated deficiency.
 
     Takes a {name: hex} mapping and returns (dE, (name_a, name_b, kind)).
