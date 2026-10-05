@@ -1,6 +1,7 @@
-from perceptual import write_atomic
+from perceptual import write_atomic, hex_lr, lch
 from editor import syntax, audit, surfaces
 from palette import contrast, lum, enforce
+from model import EMBER, chroma_for
 import json, os
 import os as _os
 _HERE = _os.path.dirname(_os.path.abspath(__file__))
@@ -14,6 +15,32 @@ P = json.load(open(_os.path.join(_HERE, "palette.json")))
 def blend(f, b, a):
     F = [int(f[i:i+2], 16) for i in (1, 3, 5)]; B = [int(b[i:i+2], 16) for i in (1, 3, 5)]
     return "#%02x%02x%02x" % tuple(round(F[k]*a + B[k]*(1-a)) for k in range(3))
+
+# Ghostty's minimum-contrast covers the block cursor too: on a cell background
+# under that ratio from cursor-color it swaps the cursor to black or white,
+# whichever contrasts more, and the glyph under it (cursor-text) can vanish. The
+# cursor lands on CurSearch after every search, so CurSearch is an ember tile
+# below the cursor in both variants, as light as the cursor and slot-15 text
+# allow. Above the cursor on light it could only sit 1.3:1 from Search, or
+# lighter than Search and lost in the page. Both
+# ratios fall as the tile lightens toward the cursor, so the passing range is
+# one interval from Lr 0 and the bisection finds its edge. Mirrors
+# minimum-contrast in ghostty/config.
+GHOSTTY_MIN_CONTRAST = 2.5
+
+def cursearch(V, floor):
+    C = chroma_for(EMBER)
+    ok = lambda lr: (contrast(V["cursor"], hex_lr(lr, C, EMBER)[0]) >= GHOSTTY_MIN_CONTRAST + 0.1
+                     and contrast(V["15"], hex_lr(lr, C, EMBER)[0]) >= floor + 0.1)
+    near, far = 0.0, lch(V["cursor"])[0]
+    if not ok(near):
+        raise ValueError(f"no CurSearch tile below cursor {V['cursor']} keeps "
+                         f"{GHOSTTY_MIN_CONTRAST + 0.1} to it and {floor + 0.1} to {V['15']}")
+    for _ in range(50):
+        mid = (near + far) / 2
+        if ok(mid): near = mid
+        else: far = mid
+    return hex_lr(near, C, EMBER)[0]
 
 
 # Syntax colours come from editor.py, not from the terminal slots. The terminal
@@ -47,8 +74,8 @@ def groups(V, S):
         ("Visual", {"bg": sel}),
         ("VisualNOS", {"bg": sel}),
         ("Search", {"fg": fg, "bg": S["search"]}),
-        ("CurSearch", {"fg": bg, "bg": cur}),
-        ("IncSearch", {"fg": bg, "bg": cur}),
+        ("CurSearch", {"fg": c[15], "bg": S["cursearch"], "bold": True}),
+        ("IncSearch", {"link": "CurSearch"}),
         ("Substitute", {"fg": bg, "bg": c[9]}),
         ("MatchParen", {"bg": sel, "bold": True}),
         ("Pmenu", {"fg": fg, "bg": S["panel"]}),
@@ -113,7 +140,7 @@ def groups(V, S):
         ("Bold", {"bold": True}),
         ("Italic", {"italic": True}),
         ("Error", {"fg": X["error"]}),
-        ("Todo", {"fg": bg, "bg": c[3], "bold": True}),
+        ("Todo", {"fg": c[11], "bold": True, "italic": True}),
         # treesitter
         ("@variable", {"fg": fg}),
         ("@variable.builtin", {"fg": X["keyword"], "italic": True}),
@@ -146,9 +173,9 @@ def groups(V, S):
         ("@punctuation.bracket", {"link": "Delimiter"}),
         ("@punctuation.special", {"fg": c[14]}),
         ("@comment.todo", {"link": "Todo"}),
-        ("@comment.error", {"fg": bg, "bg": c[1], "bold": True}),
-        ("@comment.warning", {"fg": bg, "bg": c[3], "bold": True}),
-        ("@comment.note", {"fg": bg, "bg": c[4], "bold": True}),
+        ("@comment.error", {"fg": c[9], "bold": True}),
+        ("@comment.warning", {"fg": c[3], "bold": True, "italic": True}),
+        ("@comment.note", {"fg": c[12], "bold": True}),
         ("@markup.heading", {"fg": c[3], "bold": True}),
         ("@markup.strong", {"bold": True}),
         ("@markup.italic", {"italic": True}),
@@ -274,13 +301,26 @@ os.makedirs(COLORS, exist_ok=True); os.makedirs(THEMES, exist_ok=True)
 failures = []
 built = []
 for name, background, V in VARIANTS:
-    S = surfaces(V)
-    built.append((name, background, V, S))
     f = FLOOR[name]; fg, bg = V["foreground"], V["background"]
+    S = surfaces(V)
+    S["cursearch"] = cursearch(V, f)
+    built.append((name, background, V, S))
     checks = [(s, contrast(fg, S[s]), f) for s in ("line", "panel", "over", "add", "change", "delete", "text", "search")]
     checks += [("comment/panel", contrast(V["8"], S["panel"]), f * 0.66),
                ("linenr", contrast(S["linenr"], bg), 1.7),
                ("match/panel", contrast(V["11"], S["panel"]), f * 0.66)]
+    G = dict(groups(V, S))
+    checks += [("cursearch", contrast(G["CurSearch"]["fg"], G["CurSearch"]["bg"]), f)]
+    # Every filled group the cursor can sit on. Cursor only reaches the terminal
+    # through TermCursor, as the cursor colour itself, Substitute only shows
+    # while the cursor is in the command line, and Telescope titles sit in
+    # float borders.
+    unreachable = {"Cursor", "Substitute", "TelescopePromptTitle", "TelescopePreviewTitle"}
+    fills = sorted((contrast(V["cursor"], o["bg"]), g) for g, o in G.items()
+                   if "bg" in o and g not in unreachable)
+    # Print the worst fill, or every one below the floor.
+    checks += ([(f"cursor/{g}", x, GHOSTTY_MIN_CONTRAST) for x, g in fills if x < GHOSTTY_MIN_CONTRAST]
+               or [(f"cursor/{fills[0][1]}", fills[0][0], GHOSTTY_MIN_CONTRAST)])
     bad = [n for n, x, floor in checks if x < floor]
     bad += [f"syntax:{k}" for k, _ in audit(V, syntax(V), f)]
     print(f"{name:<12} " + " ".join(f"{n} {x:4.2f}" for n, x, _ in checks))
