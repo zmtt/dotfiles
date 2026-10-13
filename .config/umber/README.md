@@ -23,7 +23,7 @@ theme file — the next rebuild overwrites it.
 | `bat` output, or the code inside a diff | `bat-theme.py` | `python3 bat-theme.py` |
 | Diff washes, blame ramp, which variant delta uses | `delta.py` | `python3 delta.py` |
 | Diff gutter, changed-word highlight | `~/.config/git/common.conf` *(source)* | next diff |
-| Claude Code prompt box, "You" label | `claude-chrome.py` | `python3 claude-chrome.py`, restart |
+| Claude Code accents, labels and panels (diffs stay stock) | `claude-chrome.py` | `python3 claude-chrome.py`, restart |
 | Claude Code status line | `~/.claude/statusline-command.py` *(source)* | next turn |
 
 ## Generated versus source
