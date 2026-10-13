@@ -32,8 +32,8 @@ Everything here is **output**. Editing it is pointless; the next rebuild wins.
 
 ```
 ~/.config/ghostty/themes/umber, umber-light
-~/.config/nvim/colors/umber*.lua
-~/.config/nvim/lua/lualine/themes/umber*.lua
+~/.config/nvim/colors/umber.lua
+~/.config/nvim/lua/lualine/themes/umber.lua
 ~/.config/bat/themes/Umber*.tmTheme
 ~/.claude/themes/umber.json, umber-light.json
 ~/Library/Application Support/Google/AndroidStudio*/colors/Umber*.icls
