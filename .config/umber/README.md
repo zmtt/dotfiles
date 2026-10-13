@@ -14,7 +14,7 @@ theme file — the next rebuild overwrites it.
 | Comments dim, or an accent too loud | `build.py` `targets`, or `model.py` `USAGE` | `build.py`, then every emitter |
 | Terminal font, spacing, ligatures, cursor | `~/.config/ghostty/config` *(source)* | reload Ghostty |
 | Shell syntax colours: commands, errors | `~/.config/fish/conf.d/umber-theme.fish` *(source)* | new shell |
-| Variant switching (light follows macOS) | `~/.config/fish/functions/umber.fish` *(source)* | new shell |
+| Variant switching (light follows macOS) | `~/.config/ghostty/config` `theme` *(source)* | reload Ghostty |
 | **Any editor's** syntax: keywords, types, strings | `editor.py` | the affected emitter |
 | Neovim UI: floats, diffs, statusline | `neovim.py` | `python3 neovim.py` |
 | Android Studio editor pane | `editor.py` or `intellij.py` | `python3 intellij.py && python3 jetbrains-ui.py`, restart |
@@ -51,7 +51,6 @@ These are **source**, edit directly:
 ~/.config/umber/*.py                       the generators
 ~/.config/ghostty/config                   font, spacing, ligatures, cursor
 ~/.config/fish/conf.d/umber-theme.fish     shell syntax colours
-~/.config/fish/functions/umber.fish        the variant switcher
 ~/.claude/statusline-command.py            the status line
 ~/.config/bat/config                       picks Umber per macOS appearance
 ~/.config/git/common.conf                  delta's ANSI-named half (gutter, emph)

@@ -229,7 +229,7 @@ def main(slow=False):
     tracked = [".config/ghostty/themes", ".config/nvim/colors",
                ".config/nvim/lua/lualine/themes", ".config/bat/themes",
                ".claude/themes", ".claude/statusline-command.py",
-               ".config/fish/functions/umber.fish", ".config/umber"]
+               ".config/umber"]
     home = os.path.expanduser("~")
     r = subprocess.run(["git", "--git-dir", os.path.join(home, ".dotfiles"),
                         "--work-tree", home, "status", "--short", "--"]
