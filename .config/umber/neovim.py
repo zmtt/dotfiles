@@ -89,7 +89,7 @@ def groups(V, S):
         ("PmenuSel", {"bg": sel}),
         ("PmenuSbar", {"bg": S["panel"]}),
         ("PmenuThumb", {"bg": S["over"]}),
-        ("StatusLine", {"fg": mut, "bg": S["panel"]}),
+        ("StatusLine", {"fg": mut if lum(bg) < 0.18 else fg, "bg": S["panel"]}),
         ("StatusLineNC", {"fg": c[8], "bg": S["line"]}),
         ("WinBar", {"fg": fg, "bold": True}),
         ("WinBarNC", {"fg": c[8]}),

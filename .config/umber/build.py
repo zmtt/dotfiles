@@ -8,21 +8,21 @@ import os as _os
 _HERE = _os.path.dirname(_os.path.abspath(__file__))
 
 
-def build(bg_hex, nh, acc_L, br_L, cscale, br_cscale, targets, sel_L, cur_L):
+def build(bg_hex, nh, th, acc_L, br_L, cscale, br_cscale, targets, sel_L, sel_C, cur_L):
     bg = bg_hex
     dark = lum(bg) < 0.18
     P = {"background": bg}
-    P["foreground"] = hex_lr(solve_lr(targets["fg"], bg, 0.020, nh), 0.020, nh)[0]
-    for slot, t, c in ((0, targets["s0"], 0.022), (8, targets["s8"], 0.020)):
-        P[slot] = hex_lr(solve_lr(t, bg, c, nh), c, nh)[0]
+    P["foreground"] = hex_lr(solve_lr(targets["fg"], bg, 0.018 if dark else 0.020, th), 0.018 if dark else 0.020, th)[0]
+    for slot, t, c, h in ((0, targets["s0"], 0.022, nh), (8, targets["s8"], 0.016 if dark else 0.020, th)):
+        P[slot] = hex_lr(solve_lr(t, bg, c, h), c, h)[0]
     bg_lr = lch(bg)[0]   # the real ground, not the bg_L parameter
     if dark:
-        P[7]  = hex_lr(solve_lr(targets["s7"], bg, 0.016, nh), 0.016, nh)[0]
-        P[15] = hex_lr(solve_lr(targets["s15"], bg, 0.010, nh), 0.010, nh)[0]
+        P[7]  = hex_lr(solve_lr(targets["s7"], bg, 0.016, th), 0.016, th)[0]
+        P[15] = hex_lr(solve_lr(targets["s15"], bg, 0.010, th), 0.010, th)[0]
     else:
         P[7]  = hex_lr(bg_lr - 0.150, 0.018, nh)[0]
         P[15] = hex_lr(bg_lr - 0.055, 0.011, nh)[0]
-    P["selection"] = hex_lr(l_to_lr(sel_L), 0.030, nh)[0]
+    P["selection"] = hex_lr(l_to_lr(sel_L), sel_C, nh)[0]
     P["cursor"] = hex_lr(l_to_lr(cur_L), chroma_for(EMBER) * 1.15, EMBER)[0]
     # STAGGER is an offset toward contrast: lighter on the dark ground, darker on
     # the light one, so a slot keeps its rank in both variants.
@@ -37,13 +37,13 @@ def build(bg_hex, nh, acc_L, br_L, cscale, br_cscale, targets, sel_L, cur_L):
             if clipped: notes.append(f"{key}{'+' if off else ''} C{C:.3f}->{c2:.3f}")
     return P, notes
 
-DARK, dn = build(nh=250, acc_L=ACC_L["dark"], br_L=0.820,
-    cscale=CSCALE["dark"], br_cscale=0.92, sel_L=0.310, cur_L=0.750, bg_hex="#161a21",
-    targets={"fg":11.2, "s0":1.55, "s8":5.9, "s7":9.8, "s15":14.0})
+DARK, dn = build(nh=250, th=75, acc_L=ACC_L["dark"], br_L=0.820,
+    cscale=CSCALE["dark"], br_cscale=0.92, sel_L=0.330, sel_C=0.036, cur_L=0.780, bg_hex="#161a21",
+    targets={"fg":11.2, "s0":1.55, "s8":6.2, "s7":9.8, "s15":14.0})
 
-LIGHT, ln = build(nh=66, acc_L=ACC_L["light"], br_L=0.430,
-    cscale=CSCALE["light"], br_cscale=1.0, sel_L=0.890, cur_L=0.520, bg_hex="#f9f4ee",
-    targets={"fg":10.9, "s0":13.0, "s8":4.65, "s7":1.70, "s15":1.12})
+LIGHT, ln = build(nh=66, th=66, acc_L=ACC_L["light"], br_L=0.430,
+    cscale=CSCALE["light"], br_cscale=1.0, sel_L=0.912, sel_C=0.036, cur_L=0.520, bg_hex="#f9f4ee",
+    targets={"fg":10.9, "s0":13.0, "s8":4.85, "s7":1.70, "s15":1.12})
 
 NAMES = {1:"red",2:"green",3:"yellow",4:"blue",5:"magenta",6:"cyan"}
 def report(label, P, notes):
@@ -81,7 +81,7 @@ for label, P in (("dark", DARK), ("light", LIGHT)):
           (("red", 1), ("yellow", 3), ("cyan", 6), ("blue", 4), ("magenta", 5))}
     if min(ch["red"], ch["yellow"]) <= max(ch["cyan"], ch["blue"], ch["magenta"]):
         bad.append("salience")
-    sep, pair = worst_separation({NAMES[i]: P[i] for i in range(1, 7)})
+    sep, pair = worst_separation({**{NAMES[i]: P[i] for i in range(1, 7)}, "ember": P["cursor"]})
     if sep < SEPARATION_FLOOR:
         bad.append(f"separation {pair[0]}/{pair[1]} {pair[2]}")
     print(f"  {label:<6} " + "  ".join(f"{n} {x:5.2f}" for n, x, _ in checks)

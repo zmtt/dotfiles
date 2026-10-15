@@ -32,6 +32,18 @@ from model import APCA_FLOOR, EMBER, SEPARATION_FLOOR
 SYNTAX_C = 0.100
 ERROR_C = 0.130
 
+# Role hues, where a role departs from its terminal slot. Keyword leans off
+# magenta toward orchid-plum, type off cyan toward patina-green so that it
+# clears function's slate under tritanopia; function sits at 252.
+ROLE_HUE = {"keyword": 318.0, "type": 178.0, "function": 252.0}
+
+# Dark only: per-role (contrast target, final chroma), no ground lift. One flat
+# SYNTAX_C on dark put orchid and sky at C 0.107 to 0.115 against Lc 57; these
+# hold every hued role at Lc 60 to 63 with the cool roles quieter.
+DARK_ROLES = {"keyword": (8.45, 0.080), "function": (8.72, 0.085),
+              "type": (8.45, 0.085), "string": (8.45, 0.095),
+              "number": (8.45, 0.095), "error": (8.76, ERROR_C)}
+
 # Lightness stagger, as multipliers on each role's contrast target rather than
 # absolute Lr — for the same reason the targets themselves are contrast-based:
 # the ground differs between variants and a fixed Lr would drift. Only the roles
@@ -70,19 +82,20 @@ def syntax(V, stagger=None):
     # Contrast targets, not lightness targets: the ground differs between
     # variants, and a fixed Lr would drift.
     body = 7.8 if dark else 6.2
-    quiet = 7.0 if dark else 5.2
+    quiet = 7.0 if dark else 5.4
+    hue.update({"kw": ROLE_HUE["keyword"], "ty": ROLE_HUE["type"], "fn": ROLE_HUE["function"]})
     fg_h = lch(V["foreground"])[2]
 
     # role -> (contrast target, hue, chroma). One table so the stagger applies
     # in one place.
     spec = {
-        "keyword":  (body, hue["magenta"], SYNTAX_C),
-        "function": (body, hue["blue"], SYNTAX_C),
-        "type":     (body, hue["cyan"], SYNTAX_C),
+        "keyword":  (body, hue["kw"], SYNTAX_C),
+        "function": (body, hue["fn"], SYNTAX_C),
+        "type":     (body, hue["ty"], SYNTAX_C),
         "string":   (quiet, hue["green"], SYNTAX_C),
         "number":   (body, hue["yellow"], SYNTAX_C),
         "constant": (body, hue["yellow"], SYNTAX_C * 1.15),
-        "escape":   (body, hue["cyan"], SYNTAX_C * 0.85),
+        "escape":   (body, hue["ty"], SYNTAX_C * 0.85),
         # A step above the body roles: errors interrupt. salience() holds it.
         "error":    (body * 1.03, hue["red"], ERROR_C),
         # Instance variables and properties: a steel whisper just under plain
@@ -91,7 +104,7 @@ def syntax(V, stagger=None):
         # while CVD_SAFE is off. On the foreground's hue it failed separation
         # from param on the warm light ground (0.023), which sits beside
         # param's hue.
-        "member":   (9.2 if dark else 8.0, hue["blue"], 0.045),
+        "member":   (9.6 if dark else 8.0, hue["blue"], 0.045),
         "param":    (9.6 if dark else 8.6, hue["yellow"], 0.030),
         # Punctuation separates identifiers; it should not compete with them.
         # Below every hued role, above the comments; audit() holds the order,
@@ -103,8 +116,15 @@ def syntax(V, stagger=None):
     # punct and muted are near-neutrals on the foreground's hue, which sits next
     # to a tinted ground's own, so a lift would tint them past plain text. member
     # is a whisper too, and a lift on slate would push it toward function.
+    nolift = {"punct", "muted", "member"}
+    if dark:
+        for role, (t, C) in DARK_ROLES.items():
+            spec[role] = (t, spec[role][1], C)
+        spec["constant"] = (DARK_ROLES["number"][0], hue["yellow"], DARK_ROLES["number"][1] * 1.15)
+        spec["escape"] = (DARK_ROLES["type"][0], hue["ty"], DARK_ROLES["type"][1] * 0.85)
+        nolift |= set(DARK_ROLES) | {"constant", "escape"}
     return {role: solve(target * st.get(FAMILY.get(role, role), 1.0), bg,
-                        C + (0.0 if role in ("punct", "muted", "member") else ground_lift(bg, h)), h)
+                        C + (0.0 if role in nolift else ground_lift(bg, h)), h)
             for role, (target, h, C) in spec.items()}
 
 
@@ -167,10 +187,25 @@ def audit(V, S, floor=4.5):
     if apca(S["muted"], bg) < APCA_FLOOR["comment"]:
         bad.append(("muted Lc", round(apca(S["muted"], bg), 1)))
     bad += salience(S, V)
+    G = surfaces(V)
+    for gname, g in (("selection", V["selection"]), ("add", G["add"]),
+                     ("delete", G["delete"]), ("line", G["line"])):
+        for k, v in S.items():
+            fl = 4.0 if k in ("punct", "muted") else floor
+            if contrast(v, g) < fl:
+                bad.append((f"{k} on {gname}", round(contrast(v, g), 2)))
+        if contrast(V["8"], g) < 4.0:
+            bad.append((f"comments on {gname}", round(contrast(V["8"], g), 2)))
     dE, pair = separation(S, V["foreground"])
     if dE < SEPARATION_FLOOR:
         bad.append((f"separation {pair[0]}/{pair[1]} {pair[2]}", round(dE, 4)))
     return bad
+
+
+def surface_hue(V):
+    """The neutral hue of grounds and panels: the selection's, which build.py
+    places on the surface hue. Text greys may sit on another (warm) hue."""
+    return lch(V["selection"])[2]
 
 
 def surfaces(V):
@@ -188,17 +223,19 @@ def surfaces(V):
     """
     bg = V["background"]
     dark = lum(bg) < 0.18
-    bglr, nh = lch(bg)[0], lch(V["foreground"])[2]
+    bglr, nh = lch(bg)[0], surface_hue(V)
     d = 1 if dark else -1
     n = lambda off, C=0.017: hex_lr(bglr + d * off, C, nh)[0]
     hue = {k: lch(V[s])[2] for k, s in (("red", "1"), ("green", "2"), ("yellow", "3"))}
     return {
         "line": n(0.045), "panel": n(0.075), "over": n(0.115, 0.019),
         "ghost":  solve(1.45 if dark else 1.55, bg, 0.014, nh),
-        "linenr": solve(1.9 if dark else 2.2, bg, 0.018, nh),
-        "add":    hex_lr(bglr + d * 0.070, 0.028, hue["green"])[0],
+        "linenr": solve(2.5, bg, 0.018, nh),
+        "add":    (hex_lr(bglr + 0.070, 0.036, 148.0) if dark
+                   else hex_lr(bglr - 0.045, 0.036, hue["green"]))[0],
         "change": hex_lr(bglr + d * 0.070, 0.024, hue["yellow"])[0],
-        "delete": hex_lr(bglr + d * 0.060, 0.030, hue["red"])[0],
+        "delete": (hex_lr(bglr + 0.060, 0.030, hue["red"]) if dark
+                   else hex_lr(bglr - 0.045, 0.034, hue["red"]))[0],
         "text":   hex_lr(bglr + d * 0.135, 0.045, hue["yellow"])[0],
         "search": hex_lr(bglr + d * 0.160, 0.060, EMBER)[0],
     }

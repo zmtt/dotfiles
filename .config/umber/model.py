@@ -12,7 +12,7 @@ import math
 C_WARM, C_COOL = 0.130, 0.074
 
 # The ember: where chroma peaks, and the hue the cursor and search wash borrow.
-EMBER = 48.0
+EMBER = 56.0
 
 # How loud each hue is allowed to be, on top of warmth. Red and yellow are
 # semantic — untracked files, modified files, errors — and must catch the eye.
@@ -20,7 +20,7 @@ EMBER = 48.0
 USAGE = {"red": 1.00, "yellow": 1.00, "green": 0.88,
          "cyan": 0.80, "blue": 0.78, "magenta": 0.62}
 
-HUES = {"red": 33.0, "green": 130.0, "yellow": 72.0,
+HUES = {"red": 33.0, "green": 130.0, "yellow": 82.0,
         "blue": 250.0, "magenta": 325.0, "cyan": 185.0}
 
 # Keyed by name so moving a hue cannot orphan its weight: keyed by hue value, a

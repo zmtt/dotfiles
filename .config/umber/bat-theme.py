@@ -32,7 +32,8 @@ def build(variant, name):
     X = syntax(V)
     bg, fg = V["background"], V["foreground"]
     dark = lum(bg) < 0.18
-    nh = lch(fg)[2]
+    from editor import surface_hue
+    nh = surface_hue(V)
     bglr = lch(bg)[0]
     d = 1 if dark else -1
     line = hex_lr(bglr + d * 0.045, 0.017, nh)[0]
@@ -48,7 +49,7 @@ def build(variant, name):
     }}]
 
     settings += [
-        rule("Comment", "comment, punctuation.definition.comment", X["muted"], "italic"),
+        rule("Comment", "comment, punctuation.definition.comment", V["8"], "italic"),
         rule("String", "string, string.quoted", X["string"]),
         rule("String escape", "constant.character.escape", X["escape"]),
         rule("Number", "constant.numeric", X["number"]),

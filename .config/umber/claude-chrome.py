@@ -11,11 +11,12 @@ D, L = P["dark"], P["light"]
 # The message box takes the palette's neutral hue, the one every other
 # emitter reads off the foreground, so it is a panel of the same material as
 # the ground. Hard-coded warm hues left a brown box on the slate ground.
-dnh, lnh = lch(D["foreground"])[2], lch(L["foreground"])[2]
+from editor import surface_hue
+dnh, lnh = surface_hue(D), surface_hue(L)
 dark_box   = hex_lr(l_to_lr(0.300), 0.016, dnh)[0]
-dark_hover = hex_lr(l_to_lr(0.375), 0.019, dnh)[0]
+dark_hover = hex_lr(l_to_lr(0.330), 0.019, dnh)[0]
 light_box   = hex_lr(l_to_lr(0.930), 0.014, lnh)[0]
-light_hover = hex_lr(l_to_lr(0.968), 0.010, lnh)[0]
+light_hover = hex_lr(l_to_lr(0.950), 0.012, lnh)[0]
 
 def blend(f, b, a):
     F = [int(f[i:i+2], 16) for i in (1, 3, 5)]; B = [int(b[i:i+2], 16) for i in (1, 3, 5)]
@@ -63,8 +64,10 @@ def roles(V, dark, box, hover):
         "pink_FOR_SUBAGENTS_ONLY": c[13], "cyan_FOR_SUBAGENTS_ONLY": c[6],
         "userMessageBackground": box, "userMessageBackgroundHover": hover,
         "composerSidebarBackground": S["line"], "selectionBg": V["selection"],
-        "bashMessageBackgroundColor": blend(c[5], box, 0.08),
-        "memoryBackgroundColor": blend(c[4], box, 0.08),
+        # Light tints the paper, not the darker box: tinting the box took
+        # inactive to 3.89 and the accents to 4.21 on these fills.
+        "bashMessageBackgroundColor": blend(c[5], box, 0.08) if dark else blend(c[5], bg, 0.06),
+        "memoryBackgroundColor": blend(c[4], box, 0.08) if dark else blend(c[4], bg, 0.06),
     }
 
 failures = []
@@ -76,16 +79,27 @@ for name, title, fname, V, box, hover in (
     bg, fg = V["background"], V["foreground"]
     # Text roles against the ground and the message box they also sit on;
     # fills against the text drawn on them.
-    text = {k: min(contrast(h, bg), contrast(h, box)) for k, h in R.items()
+    text = {k: min(contrast(h, bg), contrast(h, box), contrast(h, hover)) for k, h in R.items()
             if k not in FILLS and k not in FAINT and k != "inverseText"}
     fills = {k: contrast(fg, R[k]) for k in FILLS}
     fills |= {f"inverseText/{k}": contrast(R["inverseText"], R[k]) for k in text
               if k not in GREY}
+    # Text drawn on every fill, not only the ground and the box.
+    on_fill = {f"{k}/{fk}": contrast(R[k], R[fk]) for k in text for fk in FILLS
+               if fk != "userMessageBackground"}
     worst = min(text, key=text.get)
     print(f"{name:<6} box {box}  hover {hover}  worst text {worst} {text[worst]:.2f}  "
           f"worst fill {min(fills.values()):.2f}  box vs ground {contrast(box, bg):.2f}:1")
     failures += [f"{name}:{k} {x:.2f}" for k, x in text.items() if x < (4.0 if k in GREY else 4.5)]
     failures += [f"{name}:{k} {x:.2f}" for k, x in fills.items() if x < 4.5]
+    failures += [f"{name}:{k} {x:.2f}" for k, x in on_fill.items()
+                 if x < (4.0 if k.split("/")[0] in GREY
+                         # The selection is shared with the terminal and editor,
+                         # where it is held visible against the paper; accents on
+                         # a selected row get a 4.4 tier rather than lightening it.
+                         else 4.4 if k.endswith("/selectionBg") else 4.5)]
+    wf = min(on_fill, key=on_fill.get)
+    print(f"       worst text on a fill {wf} {on_fill[wf]:.2f}")
     themes.append((fname, {"name": title, "base": name, "overrides": R}))
 enforce(failures)
 
