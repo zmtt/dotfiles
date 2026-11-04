@@ -226,17 +226,32 @@ def groups(V, S):
         ("GitSignsChange", {"fg": c[3]}),
         ("GitSignsDelete", {"fg": c[1]}),
         ("GitSignsCurrentLineBlame", {"fg": S["linenr"], "italic": True}),
-        # telescope
-        ("TelescopeNormal", {"link": "NormalFloat"}),
-        ("TelescopeBorder", {"link": "FloatBorder"}),
-        ("TelescopePromptNormal", {"fg": fg, "bg": S["over"]}),
-        ("TelescopePromptBorder", {"fg": c[8], "bg": S["over"]}),
-        ("TelescopePromptTitle", {"fg": bg, "bg": cur, "bold": True}),
-        ("TelescopePreviewTitle", {"fg": bg, "bg": c[2], "bold": True}),
-        ("TelescopeResultsTitle", {"fg": c[8], "bg": S["panel"]}),
-        ("TelescopeSelection", {"bg": sel}),
-        ("TelescopeSelectionCaret", {"fg": c[9], "bg": sel}),
-        ("TelescopeMatching", {"fg": c[11], "bold": True}),
+        # fzf-lua. With fzf_colors = true the fzf process takes its colours
+        # from the FzfLuaFzf* groups.
+        ("FzfLuaNormal", {"link": "NormalFloat"}),
+        ("FzfLuaBorder", {"link": "FloatBorder"}),
+        ("FzfLuaTitle", {"fg": bg, "bg": cur, "bold": True}),
+        ("FzfLuaPreviewTitle", {"fg": bg, "bg": c[2], "bold": True}),
+        ("FzfLuaCursorLine", {"bg": sel}),
+        ("FzfLuaFzfMatch", {"fg": c[11], "bold": True}),
+        ("FzfLuaFzfPointer", {"fg": c[9]}),
+        # fzf-lua links these to FzfLuaTitle and NonText, which put the hint
+        # line and the match count at about 1.2:1 on the float.
+        ("FzfLuaFzfHeader", {"fg": c[8]}),
+        ("FzfLuaFzfInfo", {"fg": c[8]}),
+        # The rest default to X11 names picked by 'background' (MediumSpringGreen
+        # key names at 1.05:1 on the light float), so each takes a slot.
+        ("FzfLuaHeaderBind", {"fg": c[9]}),
+        ("FzfLuaHeaderText", {"fg": c[8]}),
+        ("FzfLuaPathLineNr", {"fg": c[8]}),
+        ("FzfLuaPathColNr", {"fg": c[8]}),
+        ("FzfLuaBufNr", {"fg": c[8]}),
+        ("FzfLuaBufFlagCur", {"fg": c[9]}),
+        ("FzfLuaBufFlagAlt", {"fg": c[8]}),
+        ("FzfLuaLivePrompt", {"fg": c[11]}),
+        ("FzfLuaLiveSym", {"fg": c[11]}),
+        ("FzfLuaTabTitle", {"fg": c[8], "bold": True}),
+        ("FzfLuaTabMarker", {"fg": c[9], "bold": True}),
         # blink.cmp
         ("BlinkCmpMenu", {"link": "Pmenu"}),
         ("BlinkCmpMenuBorder", {"link": "FloatBorder"}),
@@ -333,11 +348,13 @@ for name, background, V in VARIANTS:
                ("match/panel", contrast(V["11"], S["panel"]), f * 0.66)]
     G = dict(groups(V, S))
     checks += [("cursearch", contrast(G["CurSearch"]["fg"], G["CurSearch"]["bg"]), f)]
+    checks += [(f"{g}/panel", contrast(G[g]["fg"], S["panel"]), f * 0.66) for g in G
+               if g.startswith("FzfLua") and "fg" in G[g] and "bg" not in G[g]]
     # Every filled group the cursor can sit on. Cursor only reaches the terminal
     # through TermCursor, as the cursor colour itself, Substitute only shows
-    # while the cursor is in the command line, and Telescope titles sit in
+    # while the cursor is in the command line, and fzf-lua titles sit in
     # float borders.
-    unreachable = {"Cursor", "Substitute", "TelescopePromptTitle", "TelescopePreviewTitle"}
+    unreachable = {"Cursor", "Substitute", "FzfLuaTitle", "FzfLuaPreviewTitle"}
     fills = sorted((contrast(V["cursor"], o["bg"]), g) for g, o in G.items()
                    if "bg" in o and g not in unreachable)
     # Print the worst fill, or every one below the floor.

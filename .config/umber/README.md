@@ -55,7 +55,7 @@ These are **source**, edit directly:
 ~/.config/bat/config                       picks Umber per macOS appearance
 ~/.config/git/common.conf                  delta's ANSI-named half (gutter, emph)
 ~/.config/git/umber-delta                  the pager wrapper that picks the variant
-~/.config/nvim/lua/config/lazy.lua         selects the colorscheme
+~/.config/nvim/init.lua                    selects the colorscheme
 ```
 
 `check.py` verifies the lists above along with everything else:

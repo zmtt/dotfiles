@@ -1,6 +1,8 @@
 # Interpreted, interactive, object-oriented programming language
 # (unversioned alias: installs the latest python@3.x at restore time)
 brew "python"
+# Language Server for Bash
+brew "bash-language-server"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
 # Modern, maintained replacement for ls
@@ -19,20 +21,34 @@ brew "git-delta"
 brew "jj"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
+# Language Server for the Lua language
+brew "lua-language-server"
+# Language Server Protocol for Markdown
+brew "marksman"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Open-source, cross-platform JavaScript runtime environment
 brew "node"
 # Draw UML diagrams
 brew "plantuml"
+# Prettier daemon
+brew "prettierd"
+# Static type checker for Python
+brew "pyright"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
+# Extremely fast Python linter, written in Rust
+brew "ruff"
 # Display and control your Android device
 brew "scrcpy"
 # Static analysis and lint tool, for (ba)sh scripts
 brew "shellcheck"
+# Autoformat shell script source code
+brew "shfmt"
 # Cross-shell prompt for astronauts
 brew "starship"
+# Opinionated Lua code formatter
+brew "stylua"
 # Very fast implementation of tldr in Rust
 brew "tealdeer"
 # Parser generator tool

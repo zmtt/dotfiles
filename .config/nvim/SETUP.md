@@ -2,82 +2,32 @@
 
 ## Dependencies
 
-### System-Level Requirements
+Everything below except the C compiler is in `~/.config/brew/Brewfile`. Installing Homebrew installs the Xcode Command Line Tools, which provide the compiler.
 
-| Dependency | Purpose | Install |
-|------------|---------|---------|
-| **Neovim 0.12+** | Required for `vim.lsp.config` API and nvim-treesitter (main branch) | `brew install neovim` |
-| **Git** | Plugin manager (lazy.nvim) | `brew install git` |
-| **C compiler + make** | Build telescope-fzf-native and treesitter parsers | `xcode-select --install` |
-| **ripgrep** | Telescope live grep | `brew install ripgrep` |
-| **fd** | Faster file finding (optional) | `brew install fd` |
+| Dependency | Purpose |
+|------------|---------|
+| **Neovim 0.12+** | `vim.pack`, `vim.lsp.config`, nvim-treesitter (main branch) |
+| **git** | `vim.pack` clones plugins |
+| **tree-sitter-cli** + C compiler (`xcode-select --install`) | nvim-treesitter builds parsers |
+| **fzf**, **ripgrep**, **fd** | fzf-lua: picker, live grep, file listing |
+| **lua-language-server**, **pyright**, **ruff**, **bash-language-server**, **marksman** | Language servers |
+| **kotlin-lsp** (cask) | Kotlin language server |
+| **stylua**, **prettierd**, **shfmt** | Formatters run by conform.nvim (Python uses ruff) |
 
-### Manual Tool Installs (not in Mason)
-
-```bash
-brew install --cask kotlin-lsp
-```
-
-- Swift formatting uses the toolchain's own `swift format` (Swift 6+), no separate install
-
-### Auto-Installed via Mason
-
-Declared in `lua/plugins/mason.lua`, installed automatically on first launch:
-
-- LSP servers: `lua-language-server`, `pyright`, `ruff`, `bash-language-server`, `marksman` (kotlin-lsp comes from brew)
-- Formatters: `stylua`, `prettierd`, `shfmt`
-
-Python formatting and import sorting are handled by `ruff` via conform.nvim.
+Swift formatting uses the toolchain's own `swift format` (Swift 6+), no separate install.
 
 ## Replicating on Another Mac
 
-### 1. Install prerequisites
+1. Install Homebrew.
+2. Check out the dotfiles repo (`~/.dotfiles`, fish alias `dot`), which includes `~/.config/nvim` and the Brewfile.
+3. `brew bundle --file ~/.config/brew/Brewfile`.
+4. Run `nvim`. On first launch:
+   - `vim.pack` asks to install the plugins at the revisions in `nvim-pack-lock.json`
+   - blink.cmp downloads its prebuilt fuzzy-matcher binary
+   - nvim-treesitter builds the parsers in the background
 
-```bash
-# Install Homebrew if not present
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+## Updating Plugins
 
-# Install dependencies
-brew install neovim git ripgrep fd
+`:lua vim.pack.update()` opens a review tab: `:write` applies the updates, `:quit` discards them. Then `:restart`. Commit the changed `nvim-pack-lock.json`.
 
-# Ensure Xcode CLI tools (for C compiler)
-xcode-select --install
-```
-
-### 2. Copy your config
-
-```bash
-# Option A: Direct copy (if you have access to old machine)
-scp -r oldmac:~/.config/nvim ~/.config/nvim
-
-# Option B: If you version control it (recommended)
-git clone <your-nvim-config-repo> ~/.config/nvim
-```
-
-### 3. Launch Neovim
-
-```bash
-nvim
-```
-
-On first launch:
-
-- lazy.nvim bootstraps itself
-- Plugins install automatically
-- Mason auto-installs formatters/LSPs
-- Treesitter parsers install in the background
-
-## Version Control (Recommended)
-
-To make syncing easier and track changes:
-
-```bash
-cd ~/.config/nvim
-git init
-git add .
-git commit -m "Initial neovim config"
-git remote add origin <your-repo-url>
-git push -u origin main
-```
-
-Commit `lazy-lock.json`: it pins exact plugin versions so the config is reproducible across machines.
+On another machine that already has the plugins, pulling a newer lockfile and restarting only installs plugins it is missing. Move the installed ones to the lockfile's revisions with `:lua vim.pack.update(nil, { target = 'lockfile' })`: it opens the same review tab, so `:write`, then `:restart`.

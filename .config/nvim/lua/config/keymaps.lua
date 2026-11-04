@@ -6,7 +6,7 @@ vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<cr>", { desc = "Clear search highl
 -- File explorer
 vim.keymap.set("n", "<leader>ee", "<cmd>Explore<cr>", { desc = "Open file explorer" })
 
--- LSP keymaps (will be overridden by on_attach in lspconfig.lua when LSP is active)
+-- LSP
 vim.keymap.set("n", "<leader>li", "<cmd>checkhealth vim.lsp<cr>", { desc = "LSP Info" })
 vim.keymap.set("n", "<leader>lr", "<cmd>lsp restart<cr>", { desc = "LSP Restart" })
 
